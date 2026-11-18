@@ -508,7 +508,7 @@ listing the ten evaluator trips.*
 
 *Trip 00000023: predicted route (blue) over the GPS points (red), with the scores returned by laptop 1.*
 
-<img alt="API terminal on laptop 1" src="figures/api_terminal_predict.png" style="width:48%">
+<img alt="API terminal on laptop 1" src="figures/api_terminal_predict.png" style="width:80%">
 
 
 *API terminal on laptop 1. Every request is logged, including `GET /trips` and
