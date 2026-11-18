@@ -1,0 +1,12 @@
+{
+  "partition": "student_test",
+  "radius_m": 50.0,
+  "max_k": 8,
+  "trips": 10,
+  "observations": 19160,
+  "pairs": 113639,
+  "positive_pairs": 19079,
+  "obs_without_candidates": 0,
+  "candidate_miss_rate": 0.004227557411273453,
+  "build_seconds": 0.5
+}

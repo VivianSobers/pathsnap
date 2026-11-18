@@ -1,0 +1,12 @@
+{
+  "partition": "train",
+  "radius_m": 50.0,
+  "max_k": 8,
+  "trips": 80,
+  "observations": 208417,
+  "pairs": 1084832,
+  "positive_pairs": 183582,
+  "obs_without_candidates": 18230,
+  "candidate_miss_rate": 0.11916014528565333,
+  "build_seconds": 2.6
+}
