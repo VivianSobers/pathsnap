@@ -17,14 +17,23 @@ FEATURES = [
 ]
 
 
-def build_trip_features(trip: Trip, radius_m: float, max_k: int, *, gap_limit_s: float = 60) -> tuple[pd.DataFrame, dict]:
+def trip_geometry(trip: Trip):
     tr = trip.track
     org = local_origin(tr["lon"].to_numpy(), tr["lat"].to_numpy())
     px, py = to_metric(tr["lon"].to_numpy(), tr["lat"].to_numpy(), org)
-    t = tr["t"].to_numpy()
     nx, ny = to_metric(trip.nodes["lon"].to_numpy(), trip.nodes["lat"].to_numpy(), org)
-    a = trip.arcs["from_node"].to_numpy(); b = trip.arcs["to_node"].to_numpy()
-    ax, ay, bx, by = nx[a], ny[a], nx[b], ny[b]
+    a = trip.arcs["from_node"].to_numpy()
+    b = trip.arcs["to_node"].to_numpy()
+    return np.column_stack([px, py]), np.column_stack([nx[a], ny[a]]), np.column_stack([nx[b], ny[b]])
+
+
+def build_trip_features(trip: Trip, radius_m: float, max_k: int, *, gap_limit_s: float = 60,
+                        geometry=None) -> tuple[pd.DataFrame, dict]:
+    points, starts, ends = trip_geometry(trip) if geometry is None else geometry
+    px, py = points.T
+    ax, ay = starts.T
+    bx, by = ends.T
+    t = trip.track["t"].to_numpy()
     n = len(px)
 
     # Reference arc per observation from the monotone alignment (labels only; never a feature).
