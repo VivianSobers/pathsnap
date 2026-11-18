@@ -176,18 +176,19 @@ md = f"""<div align="center" style="text-align:center;padding-top:12mm">
 
 ## Summary
 
-- **Task.** Match each point of a noisy 1 Hz GPS track to the road arc it lies on, and serve the result
-  from an API on one laptop to an evaluator UI on another.
-- **Method.** Up to 8 candidate arcs within 50 m per point, 15 features per (point, candidate) pair, six
-  model families compared with 5-fold grouped cross-validation, LightGBM chosen, then an HMM decoded with
-  Viterbi so that the route follows connected roads.
-- **Result.** The HMM raised student-test Top-1 from {f4(hmm12['student_test']['classifier_only']['top1_accuracy'])}
-  to {f4(hmm12['student_test']['hmm']['top1_accuracy'])} over the classifier alone (12 features, no U-turn
-  penalty). With 15 features, the tuned model and the U-turn penalty, the final pipeline through the API scores a pooled Top-1 of {f4(e2e['pooled_top1_accuracy'])} on the 10 student-test trips.
-- **Final evaluator result.** On the 10 evaluator trips, scored once with the committed final model, pooled
-  Top-1 is {f4(ev['pooled_top1_accuracy'])} and mean route continuity {f4(ev['mean_route_continuity'])} (section 7.5).
-- **Negative results, reported as such.** Bayesian optimisation and dropping the noisiest training trip gave
-  no measurable gain.
+PathSnap matches each point of a noisy 1 Hz GPS track to the road arc it lies on, and serves the result
+from an API on one laptop to an evaluator UI on another. Each point gets up to 8 candidate arcs within 50 m,
+and each (point, candidate) pair gets 15 features. We compared six model families with 5-fold grouped
+cross-validation, chose LightGBM, and decode each trip with an HMM and Viterbi so that the route follows
+connected roads.
+
+The HMM raised student-test Top-1 from {f4(hmm12['student_test']['classifier_only']['top1_accuracy'])} to
+{f4(hmm12['student_test']['hmm']['top1_accuracy'])} over the classifier alone (12 features, no U-turn
+penalty). The final pipeline (15 features, tuned model, U-turn penalty) scores a pooled Top-1 of
+{f4(e2e['pooled_top1_accuracy'])} through the API on the 10 student-test trips. On the 10 evaluator trips,
+scored once with the committed model, pooled Top-1 is {f4(ev['pooled_top1_accuracy'])} and mean route
+continuity {f4(ev['mean_route_continuity'])} (section 7.5). Bayesian optimisation and dropping the noisiest
+training trip gave no measurable gain.
 
 Every number in this report is generated from a file in `results/` by `report/build_report.py`. Partitions
 used: **train** = 80 training trips (fitting and grouped cross-validation), **student test** = 10
@@ -282,7 +283,7 @@ routes with breaks, and road networks split into many weakly connected component
   Without trip `00000054`, whose points mostly lie far from its network, the training figure is
   {pc(s50.miss_rate_excl_00000054)} (`results/candidates/sweep.csv`). Larger radii lower it only slowly while
   growing the candidate set quickly.
-- **Direction matters**: heading separates the two directions of a two-way road and rejects cross streets.
+- **Direction.** Heading separates the two directions of a two-way road and rejects cross streets.
 
 Fifteen features per (observation, candidate) pair (`pathsnap/features.py`):
 
@@ -351,8 +352,7 @@ inference-time panel in this figure comes from the comparison runs, which used t
 
 ![MLP loss curve](../results/models/diagnostics/mlp_loss_curve.png)
 
-The MLP is the only model with epoch-wise training, so it is the only one with a loss curve. The other
-models have no training history and no curve is drawn for them.
+The MLP is the only model trained epoch by epoch, so it is the only one with a loss curve.
 
 ## 4. Bayesian hyperparameter optimisation (LightGBM)
 
@@ -483,7 +483,7 @@ the repository alone.
 
 ### 7.3 Evaluator trips
 
-The evaluator trips were received after the final model was committed and were used once, to confirm the
+The evaluator trips were received after the final model was committed. Their first use was to confirm that the
 system works on every trip (`scripts/evaluator_smoke_test.py`, `results/e2e/evaluator_smoke_test.json`). The
 scorer was replaced by a stub, so no reference route was read and no accuracy was computed. All
 {smoke['valid']} trips returned a predicted route. Nothing was changed after this check.
@@ -492,12 +492,11 @@ scorer was replaced by a stub, so no reference route was read and no accuracy wa
 
 On 18 November 2026 the API ran on laptop 1 (Fedora, `10.30.202.250:8000`) and the UI on laptop 2
 (Windows, `10.30.200.139:8080`), both on the campus Wi-Fi. The UI listed the ten evaluator trips and ran
-trip 00000023 end to end, with scoring done on laptop 1. This was after the final model was committed,
-and nothing was changed because of it.
+trip 00000023 end to end, with scoring done on laptop 1.
 
 The first attempt failed with "Cannot reach the API" even though the requests were reaching laptop 1. The
-UI page had been opened from a different address from the one the API allows (CORS). Opening the UI at
-laptop 2's network address, the origin set in `PATHSNAP_UI_ORIGIN`, fixed it.
+likely cause was that the UI page had been opened from an address other than the one the API allows
+(CORS). Opening the UI at laptop 2's network address, the origin set in `PATHSNAP_UI_ORIGIN`, fixed it.
 
 ![UI on laptop 2 connected to the API on laptop 1](figures/ui_connectivity.png)
 
