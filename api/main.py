@@ -9,9 +9,12 @@ from time import perf_counter
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from joblib import load
 from pydantic import BaseModel
 
+from api.evaluate import score_trip
 from pathsnap.io import Trip, list_trips, load_trip
+from pathsnap.predict import predict_trip as decode_trip
 
 
 logger = logging.getLogger("uvicorn.error").getChild("pathsnap")
@@ -95,7 +98,17 @@ def create_app(evaluation_dir: Path | None, *, predict: Predictor | None = None,
     return app
 
 
-evaluation_path = os.environ.get("PATHSNAP_EVALUATION_DIR")
-app = create_app(
-    Path(evaluation_path) if evaluation_path else None, ui_origin=os.getenv("PATHSNAP_UI_ORIGIN")
-)
+def create_configured_app():
+    """Load an artifact exported by this project for the configured evaluation directory."""
+    evaluation_path = os.getenv("PATHSNAP_EVALUATION_DIR")
+    artifact_path = os.getenv("PATHSNAP_MODEL_ARTIFACT")
+    artifact = load(artifact_path) if artifact_path else None
+    return create_app(
+        Path(evaluation_path) if evaluation_path else None,
+        predict=(lambda trip: decode_trip(trip, artifact)) if artifact is not None else None,
+        score=score_trip,
+        ui_origin=os.getenv("PATHSNAP_UI_ORIGIN"),
+    )
+
+
+app = create_configured_app()
