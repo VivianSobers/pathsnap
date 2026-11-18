@@ -1,78 +1,80 @@
 {
   "artifact": "artifacts/lightgbm_f15_tuned_uturn10.joblib",
   "partition": "student_test",
+  "commit": "c96bedb",
+  "run_at_utc": "2026-11-18T10:42:27+00:00",
   "trips": [
     {
       "trip": "00000000",
       "n_points": 2503,
       "top1_accuracy": 0.9560527367159408,
       "route_continuity": 0.8425925925925926,
-      "runtime_s": 2.1214746089999608
+      "runtime_s": 0.8301968290006698
     },
     {
       "trip": "00000007",
       "n_points": 1354,
       "top1_accuracy": 0.9948301329394387,
       "route_continuity": 0.975609756097561,
-      "runtime_s": 0.9151597219997711
+      "runtime_s": 0.43961183999999776
     },
     {
       "trip": "00000009",
       "n_points": 1049,
       "top1_accuracy": 0.8817921830314586,
       "route_continuity": 0.795,
-      "runtime_s": 1.371502450000662
+      "runtime_s": 0.5259871510006633
     },
     {
       "trip": "00000040",
       "n_points": 2995,
       "top1_accuracy": 0.9332220367278798,
       "route_continuity": 0.8301369863013699,
-      "runtime_s": 1.8361825060001138
+      "runtime_s": 1.0876451859994631
     },
     {
       "trip": "00000052",
       "n_points": 262,
       "top1_accuracy": 0.9923664122137404,
       "route_continuity": 0.9036144578313253,
-      "runtime_s": 0.22413421599958383
+      "runtime_s": 0.16012138400037657
     },
     {
       "trip": "00000056",
       "n_points": 3958,
       "top1_accuracy": 0.9325416877210713,
       "route_continuity": 0.8506751389992058,
-      "runtime_s": 3.4148991669999305
+      "runtime_s": 1.725252416999865
     },
     {
       "trip": "00000065",
       "n_points": 768,
       "top1_accuracy": 0.859375,
       "route_continuity": 0.7880794701986755,
-      "runtime_s": 0.8030225270003939
+      "runtime_s": 0.4189275890003046
     },
     {
       "trip": "00000076",
       "n_points": 1486,
       "top1_accuracy": 0.914535666218035,
       "route_continuity": 0.7653061224489796,
-      "runtime_s": 2.3182328920001964
+      "runtime_s": 1.169722596999236
     },
     {
       "trip": "00000077",
       "n_points": 3911,
       "top1_accuracy": 0.8136026591664536,
       "route_continuity": 0.606,
-      "runtime_s": 3.0310042439996323
+      "runtime_s": 1.4934589369995592
     },
     {
       "trip": "00000091",
       "n_points": 874,
       "top1_accuracy": 0.8901601830663616,
       "route_continuity": 0.7456896551724138,
-      "runtime_s": 0.8668509059998541
+      "runtime_s": 0.4245345849994919
     }
   ],
   "pooled_top1_accuracy": 0.9076200417536534,
-  "mean_route_continuity": 0.8102704179642124
+  "mean_route_continuity": 0.8102704179642123
 }
