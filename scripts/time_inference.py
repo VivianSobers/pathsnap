@@ -7,6 +7,7 @@ parameters on 15 features) and times predict_proba on all student-test candidate
 runs, single process with 4 threads where the model supports it. Writes results/models/inference_time.json.
 """
 
+import argparse
 import json
 import platform
 import time
@@ -19,12 +20,18 @@ from scripts.train_models import models
 
 
 def main():
+    ap = argparse.ArgumentParser(); ap.add_argument("--only", nargs="*"); a = ap.parse_args()
     cfg = load_config(); seed = cfg["seed"]
     _, X, y, _ = load_partition(cfg, "train")
     _, tX, _, _ = load_partition(cfg, "student_test")
-    out = {"host": platform.node(), "pairs": int(len(tX)), "repeats": 5, "models": {}}
-    for name in ["logreg", "gaussian_nb", "knn", "random_forest", "lightgbm", "mlp", "lightgbm_f15_tuned", "lightgbm_tuned_f12"]:
-        if name.startswith("lightgbm_"):
+    path = cfg["paths"]["results"] / "models" / "inference_time.json"
+    out = json.loads(path.read_text()) if a.only and path.exists() else {"host": platform.node(), "pairs": int(len(tX)), "repeats": 5, "models": {}}
+    names = ["logreg", "gaussian_nb", "knn", "random_forest", "lightgbm", "mlp", "lightgbm_f15_tuned", "lightgbm_tuned_f12",
+             "lightgbm_f15_untuned"]
+    for name in (a.only or names):
+        if name == "lightgbm_f15_untuned":
+            m, sub = models(seed, 4)["lightgbm"][0](), None
+        elif name.startswith("lightgbm_"):
             m = models(seed, 4)["lightgbm"][0](); sub = None
             pfile = "best_params_lightgbm_f15.json" if name == "lightgbm_f15_tuned" else "best_params.json"
             m.set_params(**json.loads((cfg["paths"]["results"] / "hpo" / pfile).read_text())["params"], subsample_freq=1)
@@ -32,7 +39,7 @@ def main():
             m, sub = models(seed, 4)[name]
             if not hasattr(m, "fit"):
                 m = m()
-        cols = slice(None) if name == "lightgbm_f15_tuned" else slice(0, 12)
+        cols = slice(None) if name.startswith("lightgbm_f15") else slice(0, 12)
         idx = np.arange(len(y))
         if sub and len(idx) > sub:
             idx = np.random.default_rng(seed).choice(idx, sub, replace=False)
@@ -42,7 +49,7 @@ def main():
             t0 = time.perf_counter(); m.predict_proba(tX[:, cols]); times.append(time.perf_counter() - t0)
         out["models"][name] = {"median_s": float(np.median(times)), "times_s": times}
         print(name, round(float(np.median(times)), 4), flush=True)
-    (cfg["paths"]["results"] / "models" / "inference_time.json").write_text(json.dumps(out, indent=2))
+    path.write_text(json.dumps(out, indent=2))
 
 
 if __name__ == "__main__":

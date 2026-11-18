@@ -8,3 +8,4 @@ __pycache__/
 data/interim/
 artifacts/*.tmp
 *.egg-info/
+report/PathSnap_Report.html
