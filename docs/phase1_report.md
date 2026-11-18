@@ -99,6 +99,23 @@ From `results/models/comparison.csv` (built by `scripts/compare_models.py` from 
 
 Fit and inference times were measured on two different machines (laptop and Mac mini, last column), so they are only comparable within one machine.
 
+### Training against test (overfitting check)
+
+Each final model was refit on all 80 training trips and scored on those same trips. Accuracy and macro F1 are candidate-level; Top-1 is per GPS point.
+
+| Model | Train accuracy | Train macro F1 | Train Top-1 | Test accuracy | Test macro F1 | Test Top-1 |
+|---|---|---|---|---|---|---|
+| Logistic Regression | 0.9347 | 0.8824 | 0.7411 | 0.9412 | 0.8939 | 0.8453 |
+| Gaussian NB | 0.8202 | 0.7561 | 0.7303 | 0.8261 | 0.7623 | 0.8275 |
+| KNN | 0.9509 | 0.9109 | 0.7782 | 0.9471 | 0.9037 | 0.8480 |
+| Random Forest | 0.9752 | 0.9551 | 0.8322 | 0.9540 | 0.9162 | 0.8634 |
+| LightGBM | 0.9592 | 0.9265 | 0.7864 | 0.9542 | 0.9172 | 0.8651 |
+| MLP | 0.9510 | 0.9116 | 0.7654 | 0.9520 | 0.9133 | 0.8620 |
+
+Random Forest has the largest gap (accuracy 0.9752 on training against 0.9540 on test, macro F1 0.9551 against 0.9162): mild overfitting. LightGBM, KNN and the MLP lose 0.4 accuracy points or less, so they show no real overfitting. Logistic Regression and Gaussian Naive Bayes score slightly higher on test than on training, which points to underfitting: their limit is the model's form, not the data.
+
+Training Top-1 is lower than test Top-1 for every model. This is not underfitting: 11.9% of training points (mostly trip `00000054`) have no correct arc among their candidates and always count as wrong, against 0.4% on the student-test trips.
+
 ## 6. What we pick and why
 
 **We take LightGBM forward** to Bayesian optimisation and the HMM decoder.
