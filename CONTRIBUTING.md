@@ -17,17 +17,17 @@ itself; a UI on laptop 2 lets the evaluator pick one of the ten reserved trips a
 | Phase | Name | Owner(s) | Done | Left | Status |
 |---|---|---|---|---|---|
 | 0 | Repository and environment | Vivian | 3 | 0 | ✅ |
-| 1 | Data loading and EDA | Harsimran, Vivian | 2 | 4 | ❌ |
-| 2 | Labels and candidate generation | Vivian | 0 | 4 | ❌ |
-| 3 | Feature engineering | Vivian, Chirag | 0 | 3 | ❌ |
-| 4 | Model experiments (five or more models) | Chirag, Vivian | 0 | 7 | ❌ |
+| 1 | Data loading and EDA | Harsimran, Vivian | 6 | 0 | ✅ |
+| 2 | Labels and candidate generation | Vivian | 3 | 1 | ❌ |
+| 3 | Feature engineering | Vivian, Chirag | 3 | 0 | ✅ |
+| 4 | Model experiments (five or more models) | Chirag, Vivian | 6 | 1 | ❌ |
 | 5 | Bayesian hyperparameter optimisation | Vivian | 0 | 3 | ❌ |
 | 6 | HMM and Viterbi decoding | Vivian | 0 | 5 | ❌ |
-| 7 | Folium maps and plots | Harsimran | 0 | 4 | ❌ |
+| 7 | Folium maps and plots | Harsimran | 3 | 1 | ❌ |
 | 8 | API | Chirag, Vivian | 0 | 4 | ❌ |
 | 9 | UI | Chiranthan | 0 | 3 | ❌ |
 | 10 | Integration, README and report | Everyone | 0 | 6 | ❌ |
-| | **Total** | | **5** | **43** | |
+| | **Total** | | **24** | **24** | |
 
 ## Share of work
 
@@ -67,11 +67,11 @@ Use the 80 training trips and the 10 student-testing trips only. State the parti
 | Status | Task | Owner | Where |
 |---|---|---|---|
 | ✅ | Trip loader for `.track`, `.nodes`, `.arcs`, `.route` | Vivian | `pathsnap/io.py` |
-| ✅ | Projection to UTM zone 32N (EPSG:32632) for distances in metres | Vivian | `pathsnap/geo.py` |
-| ❌ | Inventory table: trips, points, nodes, arcs, route length per partition | Harsimran | `scripts/eda.py`, `results/eda/` |
-| ❌ | Sampling intervals, gaps over 5 s, very large gaps, missing or invalid values | Harsimran | `scripts/eda.py`, `results/eda/` |
-| ❌ | Network connectivity: components, isolated nodes, route breaks | Harsimran | `scripts/eda.py`, `results/eda/` |
-| ❌ | Data-quality record: issues, assumptions, decisions | Harsimran | `docs/data_quality.md` |
+| ✅ | Projection to local metres per trip (azimuthal equidistant around the trip centroid; trips are worldwide) | Vivian | `pathsnap/geo.py` |
+| ✅ | Inventory table: trips, points, nodes, arcs, route length per partition | Harsimran | `scripts/eda.py`, `results/eda/` |
+| ✅ | Sampling intervals, gaps over 5 s, very large gaps, missing or invalid values | Harsimran | `scripts/eda.py`, `results/eda/` |
+| ✅ | Network connectivity: components, isolated nodes, route breaks | Harsimran | `scripts/eda.py`, `results/eda/` |
+| ✅ | Data-quality record: issues, assumptions, decisions | Harsimran | `docs/data_quality.md` |
 
 ## Phase 2: Labels and candidate generation
 
@@ -79,9 +79,9 @@ The `.route` file has no timestamps, so each GPS observation needs a reference a
 
 | Status | Task | Owner | Where |
 |---|---|---|---|
-| ❌ | Point-to-segment distance and projection on the arc | Vivian | `pathsnap/geo.py` |
-| ❌ | Monotone alignment of observations to route arcs (dynamic programming over the route order) | Vivian | `pathsnap/labels.py` |
-| ❌ | Candidate arcs within a radius using a spatial index, keep the k nearest | Vivian | `pathsnap/candidates.py` |
+| ✅ | Point-to-segment distance and projection on the arc | Vivian | `pathsnap/geo.py` |
+| ✅ | Monotone alignment of observations to route arcs (dynamic programming over the route order) | Vivian | `pathsnap/labels.py` |
+| ✅ | Candidate arcs within a radius using a spatial index, keep the k nearest | Vivian | `pathsnap/candidates.py` |
 | ❌ | Candidate miss rate against radius and k, used to choose both | Vivian | `scripts/candidate_sweep.py`, `results/candidates/` |
 
 ## Phase 3: Feature engineering
@@ -90,9 +90,9 @@ One row per (observation, candidate) pair, with the trip id kept for grouped cro
 
 | Status | Task | Owner | Where |
 |---|---|---|---|
-| ❌ | Geometric features: distance, distance rank, heading difference, arc length, position along arc | Vivian | `pathsnap/features.py` |
-| ❌ | Motion and context features: speed, turn rate, gap since last point, distance to neighbours' candidates | Chirag | `pathsnap/features.py` |
-| ❌ | Feature table build for train and student test, saved as Parquet | Vivian | `scripts/build_features.py` |
+| ✅ | Geometric features: distance, distance rank, heading difference, arc length, position along arc | Vivian | `pathsnap/features.py` |
+| ✅ | Motion and context features: speed, turn rate, gap since last point, distance to neighbours' candidates | Chirag | `pathsnap/features.py` |
+| ✅ | Feature table build for train and student test, saved as Parquet | Vivian | `scripts/build_features.py` |
 
 ## Phase 4: Model experiments
 
@@ -101,13 +101,13 @@ Student-test trips are used only for comparison, never for fitting.
 
 | Status | Task | Owner | Where |
 |---|---|---|---|
-| ❌ | Metrics: accuracy, precision, recall, Macro F1, log loss, Top-1, candidate miss rate, route continuity | Chirag | `pathsnap/metrics.py`, `tests/test_metrics.py` |
-| ❌ | Cross-validation and experiment logging harness (config, seed, times, scores to JSON) | Chirag | `pathsnap/experiment.py` |
-| ❌ | Logistic Regression and Gaussian Naive Bayes | Chirag | `scripts/train_models.py` |
-| ❌ | KNN (distance-weighted) | Chirag | `scripts/train_models.py` |
-| ❌ | Random Forest and Extra Trees | Vivian | `scripts/train_models.py` |
-| ❌ | LightGBM and MLP | Vivian | `scripts/train_models.py` |
-| ❌ | Comparison table and plots: CV Macro F1, student-test Top-1 and Macro F1, log loss, inference time | Chirag | `scripts/compare_models.py`, `results/models/` |
+| ✅ | Metrics: accuracy, precision, recall, Macro F1, log loss, Top-1, candidate miss rate, route continuity | Chirag | `pathsnap/metrics.py`, `tests/test_metrics.py` |
+| ✅ | Cross-validation and experiment logging harness (config, seed, times, scores to JSON) | Chirag | `pathsnap/experiment.py` |
+| ✅ | Logistic Regression and Gaussian Naive Bayes | Chirag | `scripts/train_models.py` |
+| ✅ | KNN (distance-weighted) | Chirag | `scripts/train_models.py` |
+| ✅ | Random Forest | Vivian | `scripts/train_models.py` |
+| ✅ | LightGBM and MLP (selected: LightGBM, see `docs/phase1_report.md`) | Vivian | `scripts/train_models.py` |
+| ❌ | Comparison table (done, `results/models/comparison.csv`) and plots: CV Macro F1, student-test Top-1 and Macro F1, log loss, inference time | Chirag | `scripts/compare_models.py`, `results/models/` |
 
 ## Phase 5: Bayesian hyperparameter optimisation
 
@@ -131,10 +131,10 @@ Student-test trips are used only for comparison, never for fitting.
 
 | Status | Task | Owner | Where |
 |---|---|---|---|
-| ❌ | Map of a trip: GPS points, nearby road network, reference route | Harsimran | `pathsnap/maps.py` |
-| ❌ | Predicted route layer, legend, layer control, fitted zoom | Harsimran | `pathsnap/maps.py` |
+| ✅ | Map of a trip: GPS points, nearby road network, reference route | Harsimran | `pathsnap/maps.py` |
+| ✅ | Predicted route layer, legend, layer control, fitted zoom | Harsimran | `pathsnap/maps.py` |
 | ❌ | Maps for selected train and student-test trips | Harsimran | `results/maps/` |
-| ❌ | EDA plots for the report (coordinate spread, interval histogram, network size) | Harsimran | `scripts/eda.py`, `results/eda/` |
+| ✅ | EDA plots for the report (coordinate spread, interval histogram, network size) | Harsimran | `scripts/eda.py`, `results/eda/` |
 
 ## Phase 8: API
 
