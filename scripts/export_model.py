@@ -14,9 +14,10 @@ from scripts.train_models import models
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--model", choices=models(0, 1), default="random_forest")
+    parser.add_argument("--model", choices=models(0, 1), default="lightgbm")
     parser.add_argument("--jobs", type=int, default=2)
-    parser.add_argument("--beta-m", type=float, default=20)
+    # beta x emission weight = 100 was best on training out-of-fold predictions (results/hmm/).
+    parser.add_argument("--beta-m", type=float, default=100)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     if args.beta_m <= 0 or args.jobs < 1:
