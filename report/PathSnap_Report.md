@@ -192,6 +192,31 @@ student-test macro F1 (0.9172) and Top-1 (0.8651),
 the lowest student-test log loss (0.1129), ties Random Forest on CV log loss and overfits less than
 Random Forest (section 3.2).
 
+### 3.1.1 Training and testing accuracy
+
+Each model was refit on all 80 training trips, then scored on those same trips (train) and on the 10
+student-test trips (test). CV is the mean over the 5 grouped folds, where each fold is scored on trips the
+model did not see. Accuracy and macro F1 are per candidate pair; Top-1 is per GPS point, classifier only.
+The last row is the final classifier (15 features, tuned) used with the HMM in the API
+(`results/models/<model>.json`, `results/models/lightgbm_f15_tuned.json`).
+
+| Model | Train accuracy | Test accuracy | Train macro F1 | CV macro F1 | Test macro F1 | Train Top-1 | Test Top-1 |
+|---|---|---|---|---|---|---|---|
+| Logistic Regression | 0.9347 | 0.9412 | 0.8824 | 0.8799 | 0.8939 | 0.7411 | 0.8453 |
+| Gaussian Naive Bayes | 0.8202 | 0.8261 | 0.7561 | 0.7555 | 0.7623 | 0.7303 | 0.8275 |
+| K-Nearest Neighbours | 0.9509 | 0.9471 | 0.9109 | 0.8859 | 0.9037 | 0.7782 | 0.8480 |
+| Random Forest | 0.9752 | 0.9540 | 0.9551 | 0.8984 | 0.9162 | 0.8322 | 0.8634 |
+| LightGBM | 0.9592 | 0.9542 | 0.9265 | 0.8969 | 0.9172 | 0.7864 | 0.8651 |
+| Multi-layer Perceptron | 0.9510 | 0.9520 | 0.9116 | 0.8930 | 0.9133 | 0.7654 | 0.8620 |
+| **Final: LightGBM, 15 features, tuned** | 0.9611 | 0.9546 | 0.9297 | 0.9009 | 0.9178 | 0.7893 | 0.8658 |
+
+Random Forest has the largest train-to-test drop (accuracy 0.9752 to
+0.9540), so it overfits the most. Logistic Regression and Gaussian
+Naive Bayes score slightly higher on test than on training, a sign of underfitting. Train Top-1 is below test
+Top-1 for every model because 11.92% of training points have no correct arc
+among their candidates and always count as wrong, against 0.42% in the
+student-test trips (section 2.4).
+
 ### 3.2 Questions for every model
 
 ### 3.2.1 Logistic Regression (Linear)

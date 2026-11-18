@@ -42,6 +42,7 @@ ea_old, ea_new = J("hmm/error_analysis_wide.json"), J("hmm/error_analysis_f15.js
 e2e = J("e2e/api_student_test_lightgbm_f15_tuned_uturn10.json")
 smoke = J("e2e/evaluator_smoke_test.json")
 ev = J("e2e/api_evaluator_test_lightgbm_f15_tuned_uturn10.json")
+fin = J("models/lightgbm_f15_tuned.json")
 mins = inf["models"]
 
 NAME = {"logreg": "Logistic Regression", "gaussian_nb": "Gaussian Naive Bayes", "knn": "K-Nearest Neighbours",
@@ -331,6 +332,26 @@ the fold-to-fold standard deviation is about 0.027, so CV alone cannot separate 
 student-test macro F1 ({f4(comp.loc['lightgbm'].test_f1_macro)}) and Top-1 ({f4(runs['lightgbm']['student_test']['top1_accuracy'])}),
 the lowest student-test log loss ({f4(comp.loc['lightgbm'].test_log_loss)}), ties Random Forest on CV log loss and overfits less than
 Random Forest (section 3.2).
+
+### 3.1.1 Training and testing accuracy
+
+Each model was refit on all 80 training trips, then scored on those same trips (train) and on the 10
+student-test trips (test). CV is the mean over the 5 grouped folds, where each fold is scored on trips the
+model did not see. Accuracy and macro F1 are per candidate pair; Top-1 is per GPS point, classifier only.
+The last row is the final classifier (15 features, tuned) used with the HMM in the API
+(`results/models/<model>.json`, `results/models/lightgbm_f15_tuned.json`).
+
+| Model | Train accuracy | Test accuracy | Train macro F1 | CV macro F1 | Test macro F1 | Train Top-1 | Test Top-1 |
+|---|---|---|---|---|---|---|---|
+""" + "\n".join(f"| {NAME[m]} | {f4(runs[m]['train']['accuracy'])} | {f4(runs[m]['student_test']['accuracy'])} | {f4(runs[m]['train']['f1_macro'])} | {f4(comp.loc[m].cv_f1_macro)} | {f4(runs[m]['student_test']['f1_macro'])} | {f4(runs[m]['train']['top1_accuracy'])} | {f4(runs[m]['student_test']['top1_accuracy'])} |" for m in ORDER) + f"""
+| **Final: LightGBM, 15 features, tuned** | {f4(fin['train']['accuracy'])} | {f4(fin['student_test']['accuracy'])} | {f4(fin['train']['f1_macro'])} | {f4(fin['cv_mean']['f1_macro'])} | {f4(fin['student_test']['f1_macro'])} | {f4(fin['train']['top1_accuracy'])} | {f4(fin['student_test']['top1_accuracy'])} |
+
+Random Forest has the largest train-to-test drop (accuracy {f4(runs['random_forest']['train']['accuracy'])} to
+{f4(runs['random_forest']['student_test']['accuracy'])}), so it overfits the most. Logistic Regression and Gaussian
+Naive Bayes score slightly higher on test than on training, a sign of underfitting. Train Top-1 is below test
+Top-1 for every model because {pc(cov_tr['candidate_miss_rate'])} of training points have no correct arc
+among their candidates and always count as wrong, against {pc(cov_te['candidate_miss_rate'])} in the
+student-test trips (section 2.4).
 
 ### 3.2 Questions for every model
 
