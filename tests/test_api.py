@@ -37,3 +37,12 @@ def test_prediction_keeps_reference_out_of_predictor_and_response(tmp_path, capl
     }
     assert "POST /predict/001 200" in caplog.text
     assert TestClient(create_app(tmp_path)).post("/predict/001").status_code == 503
+
+
+def test_api_allows_the_configured_ui_origin(tmp_path):
+    origin = "http://192.168.1.22:8080"
+    client = TestClient(create_app(tmp_path, ui_origin=origin))
+    assert client.get("/trips", headers={"Origin": origin}).headers["access-control-allow-origin"] == origin
+    assert "access-control-allow-origin" not in client.get(
+        "/trips", headers={"Origin": "http://192.168.1.23:8080"}
+    ).headers

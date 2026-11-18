@@ -7,6 +7,7 @@ from pathlib import Path
 from time import perf_counter
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from pathsnap.io import Trip, list_trips, load_trip
@@ -25,9 +26,11 @@ class Prediction(BaseModel):
 
 
 def create_app(evaluation_dir: Path | None, *, predict: Predictor | None = None,
-               score: Scorer | None = None) -> FastAPI:
+               score: Scorer | None = None, ui_origin: str | None = None) -> FastAPI:
     """Serve reserved trips with independently injected prediction and scoring."""
     app = FastAPI(title="PathSnap")
+    if ui_origin is not None:
+        app.add_middleware(CORSMiddleware, allow_origins=[ui_origin], allow_methods=["GET", "POST"])
 
     @app.middleware("http")
     async def log_requests(request: Request, call_next):
@@ -74,4 +77,6 @@ def create_app(evaluation_dir: Path | None, *, predict: Predictor | None = None,
 
 
 evaluation_path = os.environ.get("PATHSNAP_EVALUATION_DIR")
-app = create_app(Path(evaluation_path) if evaluation_path else None)
+app = create_app(
+    Path(evaluation_path) if evaluation_path else None, ui_origin=os.getenv("PATHSNAP_UI_ORIGIN")
+)
