@@ -1,0 +1,3 @@
+partition,trips,points_total,points_min,points_median,points_max,nodes_median,nodes_max,arcs_median,arcs_max,route_len_median,route_len_max
+student_test,10,19160,262,1420.0,3958,6596.5,26635,13145.0,56027,250.0,1323
+train,80,208417,361,1529.0,19313,9608.0,155003,19526.5,307392,280.0,2266
