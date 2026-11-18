@@ -27,7 +27,7 @@ from pathsnap.config import REPO_ROOT, load_config
 from pathsnap.experiment import load_partition, run
 from pathsnap.metrics import pair_metrics
 
-STUDY = "lightgbm_cv_f1"
+STUDY = "lightgbm_cv_f1"  # default study; pass --study to run a separate one
 
 
 def _lgbm(**kw):
@@ -46,12 +46,13 @@ def sample(trial, space):
     return out
 
 
-def storage(cfg):
+def storage(cfg, study):
     d = cfg["paths"]["results"] / "hpo"; d.mkdir(parents=True, exist_ok=True)
-    return JournalStorage(JournalFileBackend(str(d / "optuna_journal.log")))
+    name = "optuna_journal.log" if study == STUDY else f"optuna_journal_{study}.log"
+    return JournalStorage(JournalFileBackend(str(d / name)))
 
 
-def search(cfg, space_cfg, worker, jobs):
+def search(cfg, space_cfg, worker, jobs, study_name=STUDY):
     pairs, X, y, _ = load_partition(cfg, "train")
     folds = list(GroupKFold(cfg["cv"]["n_splits"]).split(X, y, pairs["trip"]))
     seed = cfg["seed"]
@@ -69,7 +70,7 @@ def search(cfg, space_cfg, worker, jobs):
         return float(np.mean(f1s))
 
     sampler = optuna.samplers.TPESampler(seed=seed + worker, n_startup_trials=8)
-    study = optuna.create_study(study_name=STUDY, storage=storage(cfg), direction="maximize",
+    study = optuna.create_study(study_name=study_name, storage=storage(cfg, study_name), direction="maximize",
                                 sampler=sampler, load_if_exists=True)
     if worker == 0 and len(study.trials) == 0:
         # Trial 0 is the untuned configuration, so the search starts from the baseline.
@@ -80,17 +81,18 @@ def search(cfg, space_cfg, worker, jobs):
         space_cfg["n_trials"], states=(optuna.trial.TrialState.COMPLETE,))])
 
 
-def finalize(cfg, jobs):
-    study = optuna.load_study(study_name=STUDY, storage=storage(cfg))
+def finalize(cfg, jobs, study_name=STUDY, result_name="lightgbm_tuned"):
+    study = optuna.load_study(study_name=study_name, storage=storage(cfg, study_name))
     d = cfg["paths"]["results"] / "hpo"
+    suffix = "" if study_name == STUDY else f"_{study_name}"
     df = study.trials_dataframe()
-    df.to_csv(d / "trials.csv", index=False)
+    df.to_csv(d / f"trials{suffix}.csv", index=False)
     best = study.best_trial
-    (d / "best_params.json").write_text(json.dumps({
+    (d / f"best_params{suffix}.json").write_text(json.dumps({
         "trial": best.number, "cv_f1_macro": best.value, **best.user_attrs, "params": best.params,
         "n_complete": int((df["state"] == "COMPLETE").sum()), "sampler": "TPE", "seed": cfg["seed"]}, indent=2))
     model = _lgbm(**best.params, subsample_freq=1, random_state=cfg["seed"], n_jobs=jobs, verbose=-1)
-    run("lightgbm_tuned", model, cfg, cfg["paths"]["results"] / "models")
+    run(result_name, model, cfg, cfg["paths"]["results"] / "models")
 
 
 def main():
@@ -98,10 +100,15 @@ def main():
     ap.add_argument("mode", choices=["search", "finalize"])
     ap.add_argument("--worker", type=int, default=0)
     ap.add_argument("--jobs", type=int, default=4)
+    ap.add_argument("--study", default=STUDY)
+    ap.add_argument("--name", default="lightgbm_tuned", help="results/models file name for finalize")
     a = ap.parse_args()
     cfg = load_config()
     space_cfg = yaml.safe_load((REPO_ROOT / "configs" / "search_space.yaml").read_text())
-    search(cfg, space_cfg, a.worker, a.jobs) if a.mode == "search" else finalize(cfg, a.jobs)
+    if a.mode == "search":
+        search(cfg, space_cfg, a.worker, a.jobs, a.study)
+    else:
+        finalize(cfg, a.jobs, a.study, a.name)
 
 
 if __name__ == "__main__":
