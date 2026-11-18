@@ -22,7 +22,7 @@ def _read(path: Path, names: list[str], dtype) -> pd.DataFrame:
     return pd.read_csv(path, sep=r"\s+", header=None, names=names, dtype=dtype, engine="c")
 
 
-def load_trip(trip_dir: str | Path) -> Trip:
+def load_trip(trip_dir: str | Path, *, include_route: bool = True) -> Trip:
     """Load one trip folder and check that arc and route ids point at existing rows."""
     trip_dir = Path(trip_dir)
     tid = trip_dir.name
@@ -34,7 +34,7 @@ def load_trip(trip_dir: str | Path) -> Trip:
 
     route_path = base.with_suffix(".route")
     route = None
-    if route_path.exists():
+    if include_route and route_path.exists():
         route = _read(route_path, ["arc"], np.int64)["arc"].to_numpy()
 
     n_nodes = len(nodes)

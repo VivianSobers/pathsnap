@@ -19,8 +19,8 @@ from pathsnap.io import list_trips, load_trip
 
 
 def _one(args):
-    path, radius, k = args
-    return build_trip_features(load_trip(path), radius, k)
+    path, radius, k, gap_limit = args
+    return build_trip_features(load_trip(path), radius, k, gap_limit_s=gap_limit)
 
 
 def main():
@@ -37,7 +37,7 @@ def main():
 
     for part in ["train", "student_test"]:
         t0 = time.time()
-        jobs = [(p, radius, k) for p in list_trips(cfg["paths"][part])]
+        jobs = [(p, radius, k, cfg["gaps"]["split_s"]) for p in list_trips(cfg["paths"][part])]
         with ProcessPoolExecutor(args.workers) as ex:
             results = list(ex.map(_one, jobs))
         df = pd.concat([r[0] for r in results], ignore_index=True)

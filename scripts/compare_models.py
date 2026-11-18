@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 
 import pandas as pd
+from matplotlib.figure import Figure
 
 from pathsnap.config import load_config
 
@@ -33,6 +34,19 @@ def main():
     df = pd.DataFrame(rows).sort_values("cv_f1_macro", ascending=False)
     df.to_csv(d / "comparison.csv", index=False)
     (d / "comparison.md").write_text(df.to_markdown(index=False, floatfmt=".4f"))
+    metrics = {
+        "cv_f1_macro": "Grouped CV macro F1",
+        "test_top1": "Student-test Top-1 accuracy",
+        "test_f1_macro": "Student-test macro F1",
+        "test_log_loss": "Student-test log loss",
+        "test_inference_s": "Student-test inference time (s)",
+    }
+    figure = Figure(figsize=(10, 10), layout="constrained")
+    for ax, (column, label) in zip(figure.subplots(len(metrics), 1), metrics.items()):
+        ax.barh(df["model"], df[column], color="#22667a")
+        ax.invert_yaxis()
+        ax.set_title(label, loc="left")
+    figure.savefig(d / "comparison.png", dpi=160)
     print(df.to_string(index=False, float_format=lambda v: f"{v:.4f}"))
 
 
