@@ -16,8 +16,8 @@ itself; a UI on laptop 2 lets the evaluator pick one of the ten reserved trips a
 
 | Phase | Name | Owner(s) | Done | Left | Status |
 |---|---|---|---|---|---|
-| 0 | Repository and environment | Vivian | 1 | 2 | ❌ |
-| 1 | Data loading and EDA | Harsimran, Vivian | 0 | 6 | ❌ |
+| 0 | Repository and environment | Vivian | 3 | 0 | ✅ |
+| 1 | Data loading and EDA | Harsimran, Vivian | 2 | 4 | ❌ |
 | 2 | Labels and candidate generation | Vivian | 0 | 4 | ❌ |
 | 3 | Feature engineering | Vivian, Chirag | 0 | 3 | ❌ |
 | 4 | Model experiments (five or more models) | Chirag, Vivian | 0 | 7 | ❌ |
@@ -27,7 +27,7 @@ itself; a UI on laptop 2 lets the evaluator pick one of the ten reserved trips a
 | 8 | API | Chirag, Vivian | 0 | 4 | ❌ |
 | 9 | UI | Chiranthan | 0 | 3 | ❌ |
 | 10 | Integration, README and report | Everyone | 0 | 6 | ❌ |
-| | **Total** | | **1** | **47** | |
+| | **Total** | | **5** | **43** | |
 
 ## Share of work
 
@@ -57,8 +57,8 @@ come first; the rest follows in order.
 | Status | Task | Owner | Where |
 |---|---|---|---|
 | ✅ | Repository, `.gitignore`, README stub | Vivian | `/` |
-| ❌ | `requirements.txt` with pinned versions | Vivian | `requirements.txt` |
-| ❌ | Package skeleton and config loader (paths, seeds, radii) | Vivian | `pathsnap/`, `configs/` |
+| ✅ | `requirements.txt` with pinned versions | Vivian | `requirements.txt` |
+| ✅ | Package skeleton and config loader (paths, seeds, radii) | Vivian | `pathsnap/`, `configs/` |
 
 ## Phase 1: Data loading and EDA
 
@@ -66,8 +66,8 @@ Use the 80 training trips and the 10 student-testing trips only. State the parti
 
 | Status | Task | Owner | Where |
 |---|---|---|---|
-| ❌ | Trip loader for `.track`, `.nodes`, `.arcs`, `.route` | Vivian | `pathsnap/io.py` |
-| ❌ | Projection to UTM zone 32N (EPSG:32632) for distances in metres | Vivian | `pathsnap/geo.py` |
+| ✅ | Trip loader for `.track`, `.nodes`, `.arcs`, `.route` | Vivian | `pathsnap/io.py` |
+| ✅ | Projection to UTM zone 32N (EPSG:32632) for distances in metres | Vivian | `pathsnap/geo.py` |
 | ❌ | Inventory table: trips, points, nodes, arcs, route length per partition | Harsimran | `scripts/eda.py`, `results/eda/` |
 | ❌ | Sampling intervals, gaps over 5 s, very large gaps, missing or invalid values | Harsimran | `scripts/eda.py`, `results/eda/` |
 | ❌ | Network connectivity: components, isolated nodes, route breaks | Harsimran | `scripts/eda.py`, `results/eda/` |
