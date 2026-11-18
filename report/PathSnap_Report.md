@@ -1,11 +1,49 @@
 # PathSnap: Distributed Map-Matching and Route Reconstruction
 
-Technical report. UE24CS352A Machine Learning, PES University. Repository: `github.com/VivianSobers/pathsnap`.
+Technical report, ML Hackathon. UE24CS352A Machine Learning, PES University, November 2026.
+Repository: `github.com/VivianSobers/pathsnap`.
+
+## Team details
+
+**Team 35, Section C**
+
+| Name | SRN | Main areas |
+|---|---|---|
+| Chirag Basanth Bellavi | PES1UG24CS133 | Metrics, cross-validation harness, three of the six models, comparison plots, FastAPI backend |
+| Chiranthan B S Raj | PES1UG24CS134 | Evaluator UI, run instructions, UI and API screenshots |
+| Harsimran Kaur | PES1UG24CS187 | EDA script, data-quality record, Folium maps, report figures |
+| Vivian Sobers E | PES1UG24CS901 | Labels, candidates, core features, final model, Bayesian optimisation, HMM/Viterbi, server-side evaluation, integration |
+
+## Summary
+
+- **Task.** Match each point of a noisy 1 Hz GPS track to the road arc it lies on, and serve the result
+  from an API on one laptop to an evaluator UI on another.
+- **Method.** Up to 8 candidate arcs within 50 m per point, 15 features per (point, candidate) pair, six
+  model families compared with 5-fold grouped cross-validation, LightGBM chosen, then an HMM decoded with
+  Viterbi so that the route follows connected roads.
+- **Result.** The HMM raised student-test Top-1 from 0.8651
+  to 0.8877 over the classifier alone (12 features, no U-turn
+  penalty). With 15 features, the tuned model and the U-turn penalty, the final pipeline through the API scores a pooled Top-1 of 0.9076 on the 10 student-test trips.
+- **Negative results, reported as such.** Bayesian optimisation and dropping the noisiest training trip gave
+  no measurable gain.
 
 Every number in this report is generated from a file in `results/` by `report/build_report.py`. Partitions
 used: **train** = 80 training trips (fitting and grouped cross-validation), **student test** = 10
 student-testing trips (development-stage comparison). The 10 evaluator trips were not used for any
-analysis, training or choice (section 7.3).
+analysis, training or choice (sections 7.3 and 7.4).
+
+## Contents
+
+1. Problem and approach
+2. Dataset understanding and EDA
+3. Model experimentation and comparison
+4. Bayesian hyperparameter optimisation (LightGBM)
+5. HMM and Viterbi route reconstruction
+6. Geographical visualisation (Folium)
+7. API, UI and deployment
+8. Conclusions and limitations
+
+<div style="page-break-after: always"></div>
 
 ## 1. Problem and approach
 
