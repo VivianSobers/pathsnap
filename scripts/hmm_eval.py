@@ -84,21 +84,31 @@ def hmm_preds(pairs, prob, geoms, beta, w, split_s, workers):
 
 
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument("--workers", type=int, default=12); a = ap.parse_args()
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--workers", type=int, default=12)
+    ap.add_argument("--betas", type=float, nargs="+", default=[2.0, 5.0, 10.0, 20.0, 50.0])
+    ap.add_argument("--ws", type=float, nargs="+", default=[0.5, 1.0, 2.0])
+    ap.add_argument("--tag", default="")
+    a = ap.parse_args()
     cfg = load_config(); seed = cfg["seed"]; split_s = cfg["gaps"]["split_s"]
     out = cfg["paths"]["results"] / "hmm"; out.mkdir(parents=True, exist_ok=True)
     pairs, X, y, ref = load_partition(cfg, "train")
     tpairs, tX, ty, tref = load_partition(cfg, "student_test")
     geoms = dict(map(_geom, list_trips(cfg["paths"]["train"]) + list_trips(cfg["paths"]["student_test"])))
 
-    model = _tm.models(seed, a.workers)["lightgbm"][0]()
-    oof = np.zeros(len(X))
-    for tr, va in GroupKFold(cfg["cv"]["n_splits"]).split(X, y, pairs["trip"]):
-        m = clone(model).fit(X[tr], y[tr]); oof[va] = m.predict_proba(X[va])[:, 1]
-    final = clone(model).fit(X, y); tprob = final.predict_proba(tX)[:, 1]
+    cache = cfg["paths"]["interim"] / "lightgbm_untuned_probs.npz"
+    if cache.exists():
+        z = np.load(cache); oof, tprob = z["oof"], z["test"]
+    else:
+        model = _tm.models(seed, a.workers)["lightgbm"][0]()
+        oof = np.zeros(len(X))
+        for tr, va in GroupKFold(cfg["cv"]["n_splits"]).split(X, y, pairs["trip"]):
+            m = clone(model).fit(X[tr], y[tr]); oof[va] = m.predict_proba(X[va])[:, 1]
+        final = clone(model).fit(X, y); tprob = final.predict_proba(tX)[:, 1]
+        np.savez(cache, oof=oof, test=tprob)
 
     grid = []
-    for beta, w in itertools.product([2.0, 5.0, 10.0, 20.0, 50.0], [0.5, 1.0, 2.0]):
+    for beta, w in itertools.product(a.betas, a.ws):
         t0 = time.time()
         s = score(hmm_preds(pairs, oof, geoms, beta, w, split_s, a.workers), ref, geoms)
         grid.append({"beta": beta, "w": w, **s, "seconds": time.time() - t0}); print(grid[-1], flush=True)
@@ -115,8 +125,8 @@ def main():
         "student_test": {"classifier_only": score(classifier_only(tpairs, tprob), tref, geoms),
                          "hmm": score(test_hmm, tref, geoms), "hmm_decode_seconds": hmm_s},
     }
-    (out / "hmm_vs_classifier.json").write_text(json.dumps(result, indent=2))
-    (out / "student_test_predictions.json").write_text(json.dumps({t: {str(k): v for k, v in p.items()} for t, p in test_hmm.items()}))
+    (out / f"hmm_vs_classifier{a.tag}.json").write_text(json.dumps(result, indent=2))
+    (out / f"student_test_predictions{a.tag}.json").write_text(json.dumps({t: {str(k): v for k, v in p.items()} for t, p in test_hmm.items()}))
     print(json.dumps({k: result[k] for k in ["best", "train_oof", "student_test"]}, indent=2))
 
 
