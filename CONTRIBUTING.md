@@ -26,8 +26,8 @@ itself; a UI on laptop 2 lets the evaluator pick one of the ten reserved trips a
 | 7 | Folium maps and plots | Harsimran | 4 | 0 | ✅ |
 | 8 | API | Chirag, Vivian | 4 | 0 | ✅ |
 | 9 | UI | Chiranthan | 3 | 0 | ✅ |
-| 10 | Integration, README and report | Everyone | 4 | 2 | ❌ |
-| | **Total** | | **46** | **2** | |
+| 10 | Integration, README and report | Everyone | 6 | 0 | ✅ |
+| | **Total** | | **48** | **0** | |
 
 ## Share of work
 
@@ -161,9 +161,9 @@ prediction pipeline.
 | Status | Task | Owner | Where |
 |---|---|---|---|
 | ✅ | End-to-end run on all ten trips from a clean checkout (student-test trips, pooled Top-1 matches `results/e2e/`) | Vivian | `scripts/` |
-| ❌ | Two-laptop rehearsal: API on laptop 1, UI on laptop 2, logs shown | Vivian, Chirag | README "Run on two laptops" |
+| ✅ | Two-laptop rehearsal: API on laptop 1, UI on laptop 2, logs shown (log in `report/ui_deployment.md`) | Vivian, Chirag | README "Run on two laptops" |
 | ✅ | README: install, run, deploy on two laptops | Chiranthan | `README.md` |
-| ❌ | Screenshots of UI and API responses | Chiranthan | `report/figures/` |
+| ✅ | Screenshots of UI and API responses (report section 7.4) | Chiranthan | `report/figures/` |
 | ✅ | Report sections: EDA (Harsimran), models (Chirag), HPO and HMM (Vivian); assembled by `report/build_report.py` | Everyone | `report/` |
 | ✅ | Final check that every number in the report matches a file in `results/` (all numbers generated from `results/`) | Vivian | `report/` |
 
