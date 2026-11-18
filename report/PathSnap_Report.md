@@ -1,10 +1,12 @@
-<div align="center" style="text-align:center;padding-top:40mm">
-<p style="font-size:13pt;letter-spacing:1pt;margin:0">PES UNIVERSITY</p>
-<p style="font-size:12pt;margin:6pt 0 0">UE24CS352A: Machine Learning</p>
-<p style="font-size:11pt;margin:4pt 0 0">ML Hackathon, Technical Report</p>
-<h1 style="font-size:30pt;margin:34mm 0 6pt">PathSnap</h1>
+<div align="center" style="text-align:center;padding-top:12mm">
+<img alt="PES University" src="figures/pes_logo.png" width="200" style="width:55mm;margin:0 auto">
+<p style="font-size:26pt;font-weight:bold;letter-spacing:1.5pt;margin:8mm 0 0">PES UNIVERSITY</p>
+<p style="font-size:12pt;margin:3pt 0 0">Department of Computer Science and Engineering</p>
+<p style="font-size:14pt;font-weight:bold;margin:12mm 0 0">UE24CS352A: Machine Learning</p>
+<p style="font-size:12pt;margin:4pt 0 0">ML Hackathon, Technical Report</p>
+<h1 style="font-size:30pt;margin:22mm 0 6pt">PathSnap</h1>
 <p style="font-size:15pt;margin:0">Distributed Map-Matching and Route Reconstruction</p>
-<p style="font-size:12.5pt;font-weight:bold;margin:30mm 0 8pt">Team 35 &middot; Section C</p>
+<p style="font-size:12.5pt;font-weight:bold;margin:22mm 0 8pt">Team 35 &middot; Section C</p>
 <table align="center" style="width:auto;margin:0 auto;font-size:11pt">
 <tr><th style="padding:5pt 14pt">Name</th><th style="padding:5pt 14pt">SRN</th></tr>
 <tr><td style="padding:5pt 14pt">Chirag Basanth Bellavi</td><td style="padding:5pt 14pt">PES1UG24CS133</td></tr>
@@ -12,7 +14,7 @@
 <tr><td style="padding:5pt 14pt">Harsimran Kaur</td><td style="padding:5pt 14pt">PES1UG24CS187</td></tr>
 <tr><td style="padding:5pt 14pt">Vivian Sobers E</td><td style="padding:5pt 14pt">PES1UG24CS901</td></tr>
 </table>
-<p style="font-size:11pt;margin:30mm 0 0">18 November 2026</p>
+<p style="font-size:11pt;margin:22mm 0 0">18 November 2026</p>
 <p style="font-size:10pt;margin:4pt 0 0">github.com/VivianSobers/pathsnap</p>
 </div>
 
