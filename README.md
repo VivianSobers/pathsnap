@@ -52,6 +52,15 @@ be on the same network.
    python -m uvicorn api.main:app --host 0.0.0.0 --port 8000
    ```
 
+   On Linux or macOS (find the IP with `ip -4 addr` or `ipconfig getifaddr en0`):
+
+   ```bash
+   export PATHSNAP_MODEL_ARTIFACT="$PWD/artifacts/lightgbm_f15_tuned_uturn10.joblib"
+   export PATHSNAP_EVALUATION_DIR=/path/to/reserved-trips
+   export PATHSNAP_UI_ORIGIN=http://<laptop-2-ip>:8080
+   python -m uvicorn api.main:app --host 0.0.0.0 --port 8000
+   ```
+
    For development only, use `data/raw/Student folder/student_test` as the trip directory.
 3. Allow the port through the firewall (Windows, run once as administrator):
 
@@ -78,6 +87,26 @@ tiles. The API contract the UI expects is in [ui/README.md](ui/README.md).
 2. If it times out, check the firewall rule and that both laptops are on the same network.
 3. If the UI shows "Cannot reach the API" but the step above works, check that
    `PATHSNAP_UI_ORIGIN` matches the UI URL, including its scheme, hostname and port.
+
+## Reproduce the report
+
+Every number and figure in the technical report is read from `results/` by `report/build_report.py`. The
+commands below rewrite those files. They use the 15-feature set now in `pathsnap/features.py`; the
+12-feature model comparison (report section 3) was produced at commit `78f6c4e`.
+
+| Report section | Command | Output |
+|---|---|---|
+| 2. EDA | `python scripts/eda.py` and `python -m scripts.road_network_plot` | `results/eda/` |
+| 2. Candidates and features | `python -m scripts.build_features` and `python -m scripts.candidate_sweep` | `data/interim/`, `results/candidates/` |
+| 3. Models | `python -m scripts.train_models --model <name>` for each model, then `python -m scripts.compare_models` | `results/models/` |
+| 4.2 Untuned LightGBM, 15 features | `python -m scripts.train_models --model lightgbm --name lightgbm_15feat` | `results/models/lightgbm_15feat.json` |
+| 3.3 Diagnostics | `python -m scripts.model_diagnostics` and `python -m scripts.time_inference` | `results/models/diagnostics/`, `results/models/inference_time.json` |
+| 4. Bayesian optimisation | `python scripts/tune.py search --study lightgbm_f15 --worker <i>` (one or more workers), then `python scripts/tune.py finalize --study lightgbm_f15 --name lightgbm_f15_tuned` | `results/hpo/`, `results/models/lightgbm_f15_tuned.json` |
+| 5. HMM | `python -m scripts.hmm_eval --betas 50 100 200 --ws 1 --uturns 0 2 5 10 --tag _f15` (add `--exclude-train-trips 00000054 --tag _f15_excl54` for the trip-54 check) | `results/hmm/` |
+| 5. Error analysis | `python scripts/error_analysis.py results/hmm/student_test_predictions_f15.json` | `results/hmm/error_analysis_f15.json` |
+| 6. Folium maps | `python scripts/make_prediction_maps.py artifacts/lightgbm_f15_tuned_uturn10.joblib student_test 00000007 00000009 00000077` | `results/maps/` |
+| 7. End to end | `python -m scripts.api_e2e artifacts/lightgbm_f15_tuned_uturn10.joblib "data/raw/Student folder/student_test"` (or the evaluator trip directory) | `results/e2e/` |
+| Report | `python report/build_report.py`, then `python report/build_pdf.py` (needs Chrome or Chromium) | `report/PathSnap_Report.md`, `report/PathSnap_Report.pdf` |
 
 ## Repository layout
 
