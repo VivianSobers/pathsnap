@@ -268,11 +268,27 @@ routes with breaks, and road networks split into many weakly connected component
 
 ![GPS trajectories](../results/eda/trajectory_examples.png)
 
+*GPS trajectory plots: GPS points over the reference route for three training and three student-test trips
+(`scripts/eda.py`).*
+
+![Road network near the GPS track](../results/eda/road_network_examples.png)
+
+*Road-network visualisation: every arc in a 2.5 km window around the middle of training trip 00000001 and
+student-test trip 00000007, with the reference route and GPS points (`scripts/road_network_plot.py`).
+Parallel roads and slip roads next to the driven road are why the nearest arc is not always the right one.*
+
 ![Sampling intervals](../results/eda/sampling_interval_hist.png)
+
+*Time between consecutive GPS points, train and student test.*
 
 ![Road-network size and connectivity](../results/eda/network_connectivity.png)
 
+*Weakly connected components per road network and breaks per reference route, over all 90 train and
+student-test trips.*
+
 ![Trip locations](../results/eda/trip_centroids.png)
+
+*Trip centroids, train and student test.*
 
 ### 2.4 Patterns observed and the features chosen
 
@@ -431,17 +447,20 @@ the tuned parameters because the selection rule (the CV objective) was fixed bef
    current segment is closed by backtracking and a new segment starts from the next observation's emissions.
 6. **Did the HMM improve the route?** Yes, on every metric (tables below).
 
-**Decoder parameters.** Only β × w and the U-turn penalty divided by w affect the best path, so w = 1. β was
-searched over 2 to 1000 (`results/hmm/hmm_vs_classifier_wide.json`) and the penalty over 0 to 10, using
-out-of-fold probabilities on the training trips only; the rule was the highest training Top-1:
+**Decoder parameters.** Only β × w and the U-turn penalty divided by w affect the best path, so w = 1. With 12 features, β
+was searched over 2 to 1000 (`results/hmm/hmm_vs_classifier.json`, `results/hmm/hmm_vs_classifier_wide.json`);
+with 15 features, over 50, 100 and 200 with the penalty over 0 to 10. All searches used out-of-fold
+probabilities of the untuned LightGBM on the training trips only, and the rule was the highest training
+Top-1:
 
 | β = 100, U-turn penalty | Train Top-1 | Train route continuity | Train route arc F1 |
 |---|---|---|---|
 """ + "\n".join(f"| {g['uturn']:g} | {f4(g['top1_accuracy'])} | {f4(g['route_continuity'])} | {f4(g['route_arc_f1'])} |" for g in grid100) + f"""
 
-**Classifier-only against classifier + HMM** (15-feature LightGBM, β = 100, penalty 10;
+**Classifier-only against classifier + HMM** (untuned 15-feature LightGBM, β = 100, penalty 10;
 `results/hmm/hmm_vs_classifier_f15.json`). Route arc F1 compares the set of arcs in the predicted route with
-the reference route's arcs, averaged over trips.
+the reference route's arcs, averaged over trips. The deployed model uses the same decoder with the tuned
+LightGBM; its results through the API are in sections 7.2 and 7.5.
 
 | | Train (out-of-fold) classifier | Train + HMM | Student-test classifier | Student-test + HMM |
 |---|---|---|---|---|
