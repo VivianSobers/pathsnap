@@ -1,0 +1,87 @@
+{
+  "artifact": "artifacts/lightgbm_f15_tuned_uturn10.joblib",
+  "scoring": "disabled (stub)",
+  "trips": [
+    {
+      "trip": "00000015",
+      "status": 200,
+      "n_points": 6854,
+      "predicted_segments": 6833,
+      "runtime_s": 2.048184598000006,
+      "scores_returned": {}
+    },
+    {
+      "trip": "00000017",
+      "status": 200,
+      "n_points": 1346,
+      "predicted_segments": 1346,
+      "runtime_s": 1.0423713710000015,
+      "scores_returned": {}
+    },
+    {
+      "trip": "00000023",
+      "status": 200,
+      "n_points": 458,
+      "predicted_segments": 458,
+      "runtime_s": 0.18042468000001577,
+      "scores_returned": {}
+    },
+    {
+      "trip": "00000030",
+      "status": 200,
+      "n_points": 654,
+      "predicted_segments": 654,
+      "runtime_s": 0.37442549600001485,
+      "scores_returned": {}
+    },
+    {
+      "trip": "00000049",
+      "status": 200,
+      "n_points": 2642,
+      "predicted_segments": 2642,
+      "runtime_s": 0.8351353839999831,
+      "scores_returned": {}
+    },
+    {
+      "trip": "00000059",
+      "status": 200,
+      "n_points": 1031,
+      "predicted_segments": 1031,
+      "runtime_s": 0.5652322169999877,
+      "scores_returned": {}
+    },
+    {
+      "trip": "00000067",
+      "status": 200,
+      "n_points": 916,
+      "predicted_segments": 916,
+      "runtime_s": 0.30536321200000316,
+      "scores_returned": {}
+    },
+    {
+      "trip": "00000073",
+      "status": 200,
+      "n_points": 1144,
+      "predicted_segments": 1144,
+      "runtime_s": 0.4835757630000046,
+      "scores_returned": {}
+    },
+    {
+      "trip": "00000087",
+      "status": 200,
+      "n_points": 1399,
+      "predicted_segments": 1399,
+      "runtime_s": 0.8136539440000092,
+      "scores_returned": {}
+    },
+    {
+      "trip": "00000094",
+      "status": 200,
+      "n_points": 3230,
+      "predicted_segments": 3230,
+      "runtime_s": 1.097800023000019,
+      "scores_returned": {}
+    }
+  ],
+  "valid": 10
+}
