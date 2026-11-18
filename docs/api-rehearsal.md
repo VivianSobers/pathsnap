@@ -10,9 +10,9 @@ directory, a predictor, a scorer, and the UI’s exact HTTP origin.
   `-1` for observations without a prediction.
 - The scorer receives the selected trip directory and the predicted arc IDs
   after inference completes. Return only aggregate scores.
-- The UI reads trip IDs from `GET /trips` and calls `POST /predict/{trip_id}`.
-  A successful prediction contains the trip ID, arc IDs, longitude/latitude
-  segments, and the score object.
+- The UI reads trip IDs and point counts from `GET /trips` and calls
+  `POST /predict/{trip_id}`. A successful prediction contains the trip ID, GPS
+  points and route segments in latitude/longitude order, scores, and runtime.
 
 ## Rehearse on the evaluation LAN
 

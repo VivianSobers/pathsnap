@@ -2,6 +2,7 @@
 
 from collections.abc import Callable, Sequence
 import logging
+import math
 import os
 from pathlib import Path
 from time import perf_counter
@@ -20,9 +21,15 @@ Scorer = Callable[[Path, list[int]], dict[str, float | None]]
 
 class Prediction(BaseModel):
     trip_id: str
-    arc_ids: list[int]
-    route_segments: list[list[tuple[float, float]]]
+    gps: list[tuple[float, float]]
+    route: list[list[tuple[float, float]]]
     scores: dict[str, float | None]
+    runtime_s: float
+
+
+class TripSummary(BaseModel):
+    trip_id: str
+    n_points: int
 
 
 def create_app(evaluation_dir: Path | None, *, predict: Predictor | None = None,
@@ -46,11 +53,17 @@ def create_app(evaluation_dir: Path | None, *, predict: Predictor | None = None,
         return {path.name: path for path in list_trips(evaluation_dir) if not path.is_symlink()}
 
     @app.get("/trips")
-    def trips() -> dict[str, list[str]]:
-        return {"trips": list(trip_dirs())}
+    def trips() -> dict[str, list[TripSummary]]:
+        summaries = []
+        for trip_id, directory in trip_dirs().items():
+            track_path = (directory / trip_id).with_suffix(".track")
+            with track_path.open(encoding="utf-8") as track:
+                summaries.append(TripSummary(trip_id=trip_id, n_points=sum(bool(line.strip()) for line in track)))
+        return {"trips": summaries}
 
     @app.post("/predict/{trip_id}", response_model=Prediction)
     def predict_trip(trip_id: str) -> Prediction:
+        start_time = perf_counter()
         trip_dir = trip_dirs().get(trip_id)
         if trip_dir is None:
             raise HTTPException(404, "Unknown trip")
@@ -68,10 +81,16 @@ def create_app(evaluation_dir: Path | None, *, predict: Predictor | None = None,
             if arc == -1:
                 continue
             start, end = trip.arcs.iloc[arc]
-            coords = trip.nodes.iloc[[start, end]][["lon", "lat"]].to_numpy().tolist()
+            coords = trip.nodes.iloc[[start, end]][["lat", "lon"]].to_numpy().tolist()
             segments.append(coords)
-        return Prediction(trip_id=trip_id, arc_ids=arc_ids, route_segments=segments,
-                          scores=score(trip_dir, arc_ids))
+        gps = [
+            (lat, lon) for lat, lon in trip.track[["lat", "lon"]].itertuples(index=False, name=None)
+            if math.isfinite(lat) and math.isfinite(lon)
+        ]
+        scores = {key: value if value is None or math.isfinite(value) else None
+                  for key, value in score(trip_dir, arc_ids).items()}
+        return Prediction(trip_id=trip_id, gps=gps, route=segments, scores=scores,
+                          runtime_s=perf_counter() - start_time)
 
     return app
 

@@ -27,13 +27,15 @@ def test_prediction_keeps_reference_out_of_predictor_and_response(tmp_path, capl
         return {"accuracy": 1.0}
 
     client = TestClient(create_app(tmp_path, predict=predict, score=score))
-    assert client.get("/trips").json() == {"trips": ["001"]}
+    assert client.get("/trips").json() == {"trips": [{"trip_id": "001", "n_points": 1}]}
     assert client.post("/predict/missing").status_code == 404
     with caplog.at_level(logging.INFO, logger="uvicorn.error.pathsnap"):
         response = client.post("/predict/001")
-    assert response.json() == {
-        "trip_id": "001", "arc_ids": [0], "scores": {"accuracy": 1.0},
-        "route_segments": [[[8.0, 49.0], [8.1, 49.1]]],
+    payload = response.json()
+    assert payload.pop("runtime_s") >= 0
+    assert payload == {
+        "trip_id": "001", "gps": [[49.0, 8.0]], "scores": {"accuracy": 1.0},
+        "route": [[[49.0, 8.0], [49.1, 8.1]]],
     }
     assert "POST /predict/001 200" in caplog.text
     assert TestClient(create_app(tmp_path)).post("/predict/001").status_code == 503
