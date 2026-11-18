@@ -26,8 +26,8 @@ itself; a UI on laptop 2 lets the evaluator pick one of the ten reserved trips a
 | 7 | Folium maps and plots | Harsimran | 4 | 0 | ✅ |
 | 8 | API | Chirag, Vivian | 4 | 0 | ✅ |
 | 9 | UI | Chiranthan | 3 | 0 | ✅ |
-| 10 | Integration, README and report | Everyone | 1 | 5 | ❌ |
-| | **Total** | | **43** | **5** | |
+| 10 | Integration, README and report | Everyone | 2 | 4 | ❌ |
+| | **Total** | | **44** | **4** | |
 
 ## Share of work
 
@@ -160,7 +160,7 @@ prediction pipeline.
 
 | Status | Task | Owner | Where |
 |---|---|---|---|
-| ❌ | End-to-end run on all ten trips from a clean checkout | Vivian | `scripts/` |
+| ✅ | End-to-end run on all ten trips from a clean checkout (student-test trips, pooled Top-1 matches `results/e2e/`) | Vivian | `scripts/` |
 | ❌ | Two-laptop rehearsal: API on laptop 1, UI on laptop 2, logs shown | Chiranthan, Chirag | |
 | ✅ | README: install, run, deploy on two laptops | Chiranthan | `README.md` |
 | ❌ | Screenshots of UI and API responses | Chiranthan | `report/figures/` |
