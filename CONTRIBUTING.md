@@ -23,11 +23,11 @@ itself; a UI on laptop 2 lets the evaluator pick one of the ten reserved trips a
 | 4 | Model experiments (five or more models) | Chirag, Vivian | 7 | 0 | ✅ |
 | 5 | Bayesian hyperparameter optimisation | Vivian | 3 | 0 | ✅ |
 | 6 | HMM and Viterbi decoding | Vivian | 5 | 0 | ✅ |
-| 7 | Folium maps and plots | Harsimran | 3 | 1 | ❌ |
+| 7 | Folium maps and plots | Harsimran | 4 | 0 | ✅ |
 | 8 | API | Chirag, Vivian | 4 | 0 | ✅ |
 | 9 | UI | Chiranthan | 3 | 0 | ✅ |
 | 10 | Integration, README and report | Everyone | 1 | 5 | ❌ |
-| | **Total** | | **42** | **6** | |
+| | **Total** | | **43** | **5** | |
 
 ## Share of work
 
@@ -133,7 +133,7 @@ Student-test trips are used only for comparison, never for fitting.
 |---|---|---|---|
 | ✅ | Map of a trip: GPS points, nearby road network, reference route | Harsimran | `pathsnap/maps.py` |
 | ✅ | Predicted route layer, legend, layer control, fitted zoom | Harsimran | `pathsnap/maps.py` |
-| ❌ | Maps for selected train and student-test trips | Harsimran | `results/maps/` |
+| ✅ | Maps for selected student-test trips with predicted routes (00000007, 00000009, 00000077) | Harsimran | `scripts/make_prediction_maps.py`, `results/maps/` |
 | ✅ | EDA plots for the report (coordinate spread, interval histogram, network size) | Harsimran | `scripts/eda.py`, `results/eda/` |
 
 ## Phase 8: API
