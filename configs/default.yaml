@@ -9,11 +9,6 @@ paths:
   results: results
   artifacts: artifacts
 
-geo:
-  # The trips lie around 8.6 E, 49.8 N, inside UTM zone 32N.
-  input_crs: EPSG:4326
-  metric_crs: EPSG:32632
-
 candidates:
   radius_m: 50.0
   max_k: 8
