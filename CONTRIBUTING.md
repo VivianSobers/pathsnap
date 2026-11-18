@@ -26,8 +26,8 @@ itself; a UI on laptop 2 lets the evaluator pick one of the ten reserved trips a
 | 7 | Folium maps and plots | Harsimran | 4 | 0 | ✅ |
 | 8 | API | Chirag, Vivian | 4 | 0 | ✅ |
 | 9 | UI | Chiranthan | 3 | 0 | ✅ |
-| 10 | Integration, README and report | Everyone | 6 | 0 | ✅ |
-| | **Total** | | **48** | **0** | |
+| 10 | Integration, README and report | Everyone | 7 | 0 | ✅ |
+| | **Total** | | **49** | **0** | |
 
 ## Share of work
 
@@ -166,6 +166,7 @@ prediction pipeline.
 | ✅ | Screenshots of UI and API responses (report section 7.4) | Chiranthan | `report/figures/` |
 | ✅ | Report sections: EDA (Harsimran), models (Chirag), HPO and HMM (Vivian); assembled by `report/build_report.py` | Everyone | `report/` |
 | ✅ | Final check that every number in the report matches a file in `results/` (all numbers generated from `results/`) | Vivian | `report/` |
+| ✅ | Final scores on the ten evaluator trips with the frozen model, run once (report section 7.5) | Vivian | `scripts/api_e2e.py`, `results/e2e/` |
 
 ## Data and leakage rules
 
