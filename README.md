@@ -40,12 +40,13 @@ be on the same network.
 ### Laptop 1: API
 
 1. Find its IP address: `ipconfig` on Windows (the IPv4 address of the active adapter).
-2. Build the features and export the chosen model from training data. Point the API to that local
-   artifact, the evaluator-supplied trip directory, and the actual origin of the UI open on laptop 2.
+2. Point the API to the final model artifact (committed in `artifacts/`), the evaluator-supplied trip
+   directory, and the actual origin of the UI open on laptop 2. To rebuild the artifact from the
+   training data instead: `python -m scripts.export_model --jobs 8 --params-json
+   results/hpo/best_params_lightgbm_f15.json --output artifacts/lightgbm_f15_tuned_uturn10.joblib`.
 
    ```powershell
-   python -m scripts.export_model --model random_forest
-   $env:PATHSNAP_MODEL_ARTIFACT = (Resolve-Path artifacts/model.joblib).Path
+   $env:PATHSNAP_MODEL_ARTIFACT = (Resolve-Path artifacts/lightgbm_f15_tuned_uturn10.joblib).Path
    $env:PATHSNAP_EVALUATION_DIR = 'C:\path\to\reserved-trips'
    $env:PATHSNAP_UI_ORIGIN = 'http://localhost:8080'
    python -m uvicorn api.main:app --host 0.0.0.0 --port 8000
