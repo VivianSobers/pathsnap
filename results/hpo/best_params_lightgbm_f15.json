@@ -1,0 +1,20 @@
+{
+  "trial": 10,
+  "cv_f1_macro": 0.9008670707174737,
+  "cv_f1_std": 0.026093940286691146,
+  "cv_log_loss": 0.12857492239622265,
+  "seconds": 97.77997303009033,
+  "params": {
+    "n_estimators": 657,
+    "learning_rate": 0.01269170486999142,
+    "num_leaves": 228,
+    "min_child_samples": 78,
+    "subsample": 0.8231905839874377,
+    "colsample_bytree": 0.6331782063032085,
+    "reg_lambda": 0.1299738115069355,
+    "reg_alpha": 0.0024213554893651678
+  },
+  "n_complete": 32,
+  "sampler": "TPE",
+  "seed": 42
+}
