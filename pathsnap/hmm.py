@@ -1,82 +1,120 @@
-"""HMM over candidate arcs and Viterbi decoding."""
+"""HMM over candidate arcs and Viterbi decoding.
 
-from functools import lru_cache
+Hidden state at observation i: which of its candidate arcs the vehicle is on.
+Emission: w * log P(candidate is the reference arc), from the classifier.
+Transition from candidate a (at obs i) to candidate b (at obs i+1):
+    -|network_distance(a -> b) - straight_line_distance(i, i+1)| / beta
+where network_distance runs along the road graph from the projected point on a to the projected point
+on b (Newson and Krumm style). Unreachable pairs get -inf.
+Decoding restarts (a new segment) at time gaps longer than split_s and wherever every transition is
+-inf (disconnected roads). Observations without candidates get no prediction and are bridged.
+"""
 
-import networkx as nx
+from __future__ import annotations
+
 import numpy as np
+from scipy.sparse import csr_matrix
+from scipy.sparse.csgraph import dijkstra
+
+NEG = -np.inf
 
 
-def decode_route(trip, geometry, candidates, probabilities, *, split_s, beta_m=20.0):
-    """Decode the most likely arc sequence for each connected portion of a trip."""
-    if beta_m <= 0 or split_s <= 0:
-        raise ValueError("transition scale and gap limit must be positive")
-    points, starts, ends = geometry
-    timestamps = trip.track["t"].to_numpy()
-    from_nodes, to_nodes = trip.arcs[["from_node", "to_node"]].to_numpy().T
-    valid_arcs = np.isfinite(starts).all(axis=1) & np.isfinite(ends).all(axis=1)
-    lengths = np.full(len(starts), np.nan)
-    lengths[valid_arcs] = np.linalg.norm(ends[valid_arcs] - starts[valid_arcs], axis=1)
-    graph = nx.DiGraph()
-    graph.add_nodes_from(range(len(trip.nodes)))
-    for start, end, length in zip(from_nodes, to_nodes, lengths):
-        if np.isfinite(length) and (not graph.has_edge(start, end) or length < graph[start][end]["weight"]):
-            graph.add_edge(start, end, weight=length)
+def road_graph(nx, ny, arcs):
+    """Directed graph over nodes with arc lengths as weights; returns (csr, arc_length)."""
+    a, b = arcs[:, 0], arcs[:, 1]
+    length = np.hypot(nx[b] - nx[a], ny[b] - ny[a])
+    n = len(nx)
+    # Duplicate arcs between the same nodes: keep the shortest (csr sums duplicates, so dedupe first).
+    key = a.astype(np.int64) * n + b
+    order = np.lexsort((length, key))
+    first = np.r_[True, key[order][1:] != key[order][:-1]]
+    sel = order[first]
+    g = csr_matrix((np.maximum(length[sel], 1e-3), (a[sel], b[sel])), shape=(n, n))
+    return g, length
 
-    @lru_cache(maxsize=512)
-    def paths_from(node, cutoff):
-        return nx.single_source_dijkstra_path_length(graph, node, cutoff=cutoff, weight="weight")
 
-    def transition(previous, current, previous_offsets, current_offsets, displacement):
-        limit = max(500, 500 * int(np.ceil((displacement + 8 * beta_m) / 500)))
-        network = np.array([
-            [paths_from(to_nodes[left], limit).get(from_nodes[right], np.inf) for right in current]
-            for left in previous
-        ])
-        network += (lengths[previous] - previous_offsets)[:, None] + current_offsets
-        along = current_offsets - previous_offsets[:, None]
-        on_same_arc = (previous[:, None] == current) & (along >= 0)
-        network = np.where(on_same_arc, along, network)
-        return -np.abs(network - displacement) / beta_m
+def node_distances(g, sources, targets, limit):
+    """Shortest-path distance for each (source, target) pair, inf if beyond limit metres."""
+    out = np.full(len(sources), np.inf)
+    uniq, inv = np.unique(sources, return_inverse=True)
+    for s in range(0, len(uniq), 64):
+        batch = uniq[s : s + 64]
+        D = dijkstra(g, directed=True, indices=batch, limit=limit)
+        m = (inv >= s) & (inv < s + len(batch))
+        out[m] = D[inv[m] - s, targets[m]]
+    return out
 
-    output = np.full(len(points), -1, dtype=int)
-    groups = candidates.reset_index(drop=True).groupby("observation_id", sort=True).indices
-    probabilities = np.asarray(probabilities, dtype=float)
-    if probabilities.shape != (len(candidates),) or not np.isfinite(probabilities).all():
-        raise ValueError("expected one finite emission probability per candidate")
-    emissions = np.log(np.clip(probabilities, 1e-12, 1.0))
-    arcs = candidates["arc_id"].to_numpy(dtype=int)
-    offsets = candidates["position_along_arc"].to_numpy() * lengths[arcs]
-    chain = []
-    scores = np.empty(0)
 
-    def finish():
-        if chain:
-            state = int(scores.argmax())
-            for observation, indices, parents in reversed(chain):
-                output[observation] = arcs[indices[state]]
-                state = int(parents[state])
-            chain.clear()
+def viterbi_segments(steps, emis, trans_fn):
+    """Generic Viterbi with restarts.
 
-    for observation, indices in groups.items():
-        parents = np.full(len(indices), -1, dtype=int)
-        if chain:
-            last_observation, last_indices, _ = chain[-1]
-            elapsed = timestamps[observation] - timestamps[last_observation]
-            if observation != last_observation + 1 or not 0 < elapsed <= split_s:
-                finish()
-            else:
-                distance = np.linalg.norm(points[observation] - points[last_observation])
-                options = scores[:, None] + transition(
-                    arcs[last_indices], arcs[indices], offsets[last_indices], offsets[indices], distance
-                )
-                parents = options.argmax(axis=0)
-                best = options[parents, np.arange(len(indices))]
-                if np.isfinite(best).any():
-                    scores = emissions[indices] + best
-                    chain.append((observation, indices, parents))
-                    continue
-                finish()
-        scores = emissions[indices]
-        chain.append((observation, indices, parents))
-    finish()
-    return output
+    steps: list of observation ids (with at least one candidate), in time order.
+    emis[k]: log-emission vector for steps[k]. trans_fn(k) -> (n_k, n_{k+1}) log-transition matrix, or
+    None to force a restart between k and k+1. Returns the chosen candidate index for each step.
+    """
+    choice = np.zeros(len(steps), dtype=np.int64)
+    seg_start = 0
+    score = emis[0].copy()
+    back = [None]
+
+    def finish(end):
+        j = int(np.argmax(score_hist[end - seg_start]))
+        for k in range(end, seg_start - 1, -1):
+            choice[k] = j
+            if k > seg_start:
+                j = back[k - seg_start][j]
+
+    score_hist = [score]
+    for k in range(len(steps) - 1):
+        T = trans_fn(k)
+        if T is not None:
+            M = score[:, None] + T
+            best_prev = np.argmax(M, axis=0)
+            best = M[best_prev, np.arange(M.shape[1])]
+        if T is None or not np.isfinite(best).any():
+            finish(k)
+            seg_start = k + 1
+            score = emis[k + 1].copy()
+            back = [None]
+            score_hist = [score]
+            continue
+        score = best + emis[k + 1]
+        back.append(best_prev)
+        score_hist.append(score)
+    finish(len(steps) - 1)
+    return choice
+
+
+def decode_trip(obs, arc, t_along, prob, px, py, t, nx, ny, arcs, beta=10.0, w=1.0,
+                split_s=60.0, limit_m=3000.0):
+    """Decode one trip. obs/arc/t_along/prob: candidate rows sorted by obs. Returns {obs: arc}."""
+    g, alen = road_graph(nx, ny, arcs)
+    starts = np.r_[0, np.flatnonzero(np.diff(obs)) + 1]
+    ends = np.r_[starts[1:], len(obs)]
+    steps = obs[starts]
+    emis = [w * np.log(np.clip(prob[s:e], 1e-6, 1.0)) for s, e in zip(starts, ends)]
+
+    # Precompute all network distances needed between consecutive steps in one batch.
+    pairs_src, pairs_dst, idx = [], [], []
+    for k in range(len(steps) - 1):
+        s0, e0, s1, e1 = starts[k], ends[k], starts[k + 1], ends[k + 1]
+        A = np.repeat(np.arange(s0, e0), e1 - s1); B = np.tile(np.arange(s1, e1), e0 - s0)
+        pairs_src.append(arcs[arc[A], 1]); pairs_dst.append(arcs[arc[B], 0]); idx.append((A, B))
+    nd = node_distances(g, np.concatenate(pairs_src), np.concatenate(pairs_dst), limit_m) if idx else []
+    offs = np.cumsum([0] + [len(a) for a, _ in idx])
+
+    def trans(k):
+        i0, i1 = steps[k], steps[k + 1]
+        if t[i1] - t[i0] > split_s:
+            return None
+        A, B = idx[k]
+        ra, rb = arc[A], arc[B]
+        net = (1 - t_along[A]) * alen[ra] + nd[offs[k] : offs[k + 1]] + t_along[B] * alen[rb]
+        same = (ra == rb) & (t_along[B] >= t_along[A] - 0.05)
+        net = np.where(same, np.abs(t_along[B] - t_along[A]) * alen[ra], net)
+        gc = np.hypot(px[i1] - px[i0], py[i1] - py[i0])
+        lt = np.where(np.isfinite(net), -np.abs(net - gc) / beta, NEG)
+        return lt.reshape(ends[k] - starts[k], ends[k + 1] - starts[k + 1])
+
+    ch = viterbi_segments(steps, emis, trans)
+    return {int(o): int(arc[starts[k] + c]) for k, (o, c) in enumerate(zip(steps, ch))}

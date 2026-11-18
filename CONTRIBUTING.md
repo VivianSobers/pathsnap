@@ -25,9 +25,9 @@ itself; a UI on laptop 2 lets the evaluator pick one of the ten reserved trips a
 | 6 | HMM and Viterbi decoding | Vivian | 0 | 5 | ❌ |
 | 7 | Folium maps and plots | Harsimran | 3 | 1 | ❌ |
 | 8 | API | Chirag, Vivian | 0 | 4 | ❌ |
-| 9 | UI | Chiranthan | 0 | 3 | ❌ |
-| 10 | Integration, README and report | Everyone | 0 | 6 | ❌ |
-| | **Total** | | **24** | **24** | |
+| 9 | UI | Chiranthan | 3 | 0 | ✅ |
+| 10 | Integration, README and report | Everyone | 1 | 5 | ❌ |
+| | **Total** | | **28** | **20** | |
 
 ## Share of work
 
@@ -152,9 +152,9 @@ prediction pipeline.
 
 | Status | Task | Owner | Where |
 |---|---|---|---|
-| ❌ | Page listing the ten evaluation trips, API address configurable | Chiranthan | `ui/` |
-| ❌ | Show the returned route on a map and the scores | Chiranthan | `ui/` |
-| ❌ | Clear error message when the API is unreachable | Chiranthan | `ui/` |
+| ✅ | Page listing the ten evaluation trips, API address configurable | Chiranthan | `ui/` |
+| ✅ | Show the returned route on a map and the scores | Chiranthan | `ui/` |
+| ✅ | Clear error message when the API is unreachable | Chiranthan | `ui/` |
 
 ## Phase 10: Integration, README and report
 
@@ -162,7 +162,7 @@ prediction pipeline.
 |---|---|---|---|
 | ❌ | End-to-end run on all ten trips from a clean checkout | Vivian | `scripts/` |
 | ❌ | Two-laptop rehearsal: API on laptop 1, UI on laptop 2, logs shown | Chiranthan, Chirag | |
-| ❌ | README: install, run, deploy on two laptops | Chiranthan | `README.md` |
+| ✅ | README: install, run, deploy on two laptops | Chiranthan | `README.md` |
 | ❌ | Screenshots of UI and API responses | Chiranthan | `report/figures/` |
 | ❌ | Report sections: EDA (Harsimran), models (Chirag), HPO and HMM (Vivian) | Everyone | `report/` |
 | ❌ | Final check that every number in the report matches a file in `results/` | Vivian | `report/` |

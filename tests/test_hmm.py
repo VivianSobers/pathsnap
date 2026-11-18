@@ -1,24 +1,17 @@
 import numpy as np
-import pandas as pd
 
-from pathsnap.hmm import decode_route
-from pathsnap.io import Trip
+from pathsnap.hmm import viterbi_segments
 
 
-def test_viterbi_prefers_connected_arcs_and_restarts_after_gap():
-    trip = Trip(
-        "synthetic", pd.DataFrame({"t": [0, 1, 90, 91]}),
-        pd.DataFrame(index=range(5)),
-        pd.DataFrame({"from_node": [0, 1, 3], "to_node": [1, 2, 4]}),
-        None,
-    )
-    track = np.array([[0, 0], [10, 0], [12, 0], [13, 0]])
-    starts = np.array([[0, 0], [10, 0], [10, 2]])
-    ends = np.array([[10, 0], [20, 0], [20, 2]])
-    candidates = pd.DataFrame({
-        "observation_id": [0, 1, 1, 2],
-        "arc_id": [0, 1, 2, 2],
-        "position_along_arc": [0.0, 0.0, 0.0, 0.2],
-    })
-    result = decode_route(trip, (track, starts, ends), candidates, [0.8, 0.2, 0.9, 0.9], split_s=60)
-    assert result.tolist() == [0, 1, 2, -1]
+def test_viterbi_prefers_connected_path_over_greedy():
+    # Three steps, two candidates each. Greedy picks 1,0,1; transitions only allow staying on one track.
+    emis = [np.log([0.4, 0.6]), np.log([0.6, 0.4]), np.log([0.4, 0.6])]
+    stay = np.log(np.array([[0.99, 1e-6], [1e-6, 0.99]]))
+    assert list(viterbi_segments([0, 1, 2], emis, lambda k: stay)) == [1, 1, 1]
+
+
+def test_viterbi_restarts_on_disconnect():
+    emis = [np.log([0.9, 0.1]), np.log([0.1, 0.9])]
+    blocked = np.full((2, 2), -np.inf)
+    assert list(viterbi_segments([0, 1], emis, lambda k: blocked)) == [0, 1]
+    assert list(viterbi_segments([0, 1], emis, lambda k: None)) == [0, 1]

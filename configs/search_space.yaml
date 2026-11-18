@@ -1,0 +1,12 @@
+# Bayesian (TPE) search space for LightGBM. log: true samples on a log scale.
+n_trials: 30
+objective: cv_f1_macro   # mean macro F1 over GroupKFold-by-trip on the 80 training trips
+params:
+  n_estimators: {type: int, low: 100, high: 800}
+  learning_rate: {type: float, low: 0.01, high: 0.2, log: true}
+  num_leaves: {type: int, low: 15, high: 255, log: true}
+  min_child_samples: {type: int, low: 5, high: 200, log: true}
+  subsample: {type: float, low: 0.5, high: 1.0}
+  colsample_bytree: {type: float, low: 0.5, high: 1.0}
+  reg_lambda: {type: float, low: 0.001, high: 10.0, log: true}
+  reg_alpha: {type: float, low: 0.001, high: 10.0, log: true}
