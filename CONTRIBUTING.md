@@ -31,12 +31,12 @@ itself; a UI on laptop 2 lets the evaluator pick one of the ten reserved trips a
 
 ## Share of work
 
-| Person | Load | Main areas |
-|---|---|---|
-| Vivian | Highest | Labels, candidates, core features, final model, Bayesian optimisation, HMM/Viterbi, server-side evaluation, integration |
-| Chirag | Medium to high | Metrics, cross-validation harness, three of the five models, comparison plots, FastAPI backend |
-| Harsimran | Low to medium | EDA script, data-quality record, Folium maps, report figures |
-| Chiranthan | Lowest | Evaluator UI, run instructions, UI and API screenshots |
+| Person | Main areas |
+|---|---|
+| Vivian | Labels, candidates, core features, final model, Bayesian optimisation, HMM/Viterbi, server-side evaluation, integration |
+| Chirag | Metrics, cross-validation harness, three of the five models, comparison plots, FastAPI backend |
+| Harsimran | EDA script, data-quality record, Folium maps, report figures |
+| Chiranthan | Evaluator UI, run instructions, UI and API screenshots |
 
 Everyone must be able to explain their own phases in the viva, and should read the HMM section of the
 report before evaluation day.
