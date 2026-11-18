@@ -142,14 +142,27 @@ grid100 = [g for g in hmm15["grid_train_oof"] if g["beta"] == 100.0]
 ns = e2e["trips"]
 tbest = trials15.sort_values("value", ascending=False).iloc[0]
 
-md = f"""# PathSnap: Distributed Map-Matching and Route Reconstruction
+md = f"""<div align="center" style="text-align:center;padding-top:40mm">
+<p style="font-size:13pt;letter-spacing:1pt;margin:0">PES UNIVERSITY</p>
+<p style="font-size:12pt;margin:6pt 0 0">UE24CS352A: Machine Learning</p>
+<p style="font-size:11pt;margin:4pt 0 0">ML Hackathon, Technical Report</p>
+<h1 style="font-size:30pt;margin:34mm 0 6pt">PathSnap</h1>
+<p style="font-size:15pt;margin:0">Distributed Map-Matching and Route Reconstruction</p>
+<p style="font-size:12.5pt;font-weight:bold;margin:30mm 0 8pt">Team 35 &middot; Section C</p>
+<table align="center" style="width:auto;margin:0 auto;font-size:11pt">
+<tr><th style="padding:5pt 14pt">Name</th><th style="padding:5pt 14pt">SRN</th></tr>
+<tr><td style="padding:5pt 14pt">Chirag Basanth Bellavi</td><td style="padding:5pt 14pt">PES1UG24CS133</td></tr>
+<tr><td style="padding:5pt 14pt">Chiranthan B S Raj</td><td style="padding:5pt 14pt">PES1UG24CS134</td></tr>
+<tr><td style="padding:5pt 14pt">Harsimran Kaur</td><td style="padding:5pt 14pt">PES1UG24CS187</td></tr>
+<tr><td style="padding:5pt 14pt">Vivian Sobers E</td><td style="padding:5pt 14pt">PES1UG24CS901</td></tr>
+</table>
+<p style="font-size:11pt;margin:30mm 0 0">18 November 2026</p>
+<p style="font-size:10pt;margin:4pt 0 0">github.com/VivianSobers/pathsnap</p>
+</div>
 
-Technical report, ML Hackathon. UE24CS352A Machine Learning, PES University, November 2026.
-Repository: `github.com/VivianSobers/pathsnap`.
+<div style="page-break-after: always"></div>
 
-## Team details
-
-**Team 35, Section C**
+## Team and contributions
 
 | Name | SRN | Main areas |
 |---|---|---|
@@ -490,7 +503,8 @@ listing the ten evaluator trips.*
 
 *Trip 00000023: predicted route (blue) over the GPS points (red), with the scores returned by laptop 1.*
 
-![API terminal on laptop 1](figures/api_terminal_predict.png)
+<img alt="API terminal on laptop 1" src="figures/api_terminal_predict.png" style="width:58%">
+
 
 *API terminal on laptop 1. Every request is logged, including `GET /trips` and
 `POST /predict/00000023` from laptop 2 (`10.30.200.139`).*
