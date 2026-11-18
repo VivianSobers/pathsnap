@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import argparse
 
-from lightgbm import LGBMClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
@@ -21,6 +20,14 @@ from pathsnap.config import load_config
 from pathsnap.experiment import run
 
 
+def _lgbm(**kw):
+    # Imported only when used: LightGBM needs the OpenMP runtime, which some machines (macOS without
+    # libomp) lack, and the other models should still run there.
+    from lightgbm import LGBMClassifier
+
+    return LGBMClassifier(**kw)
+
+
 def models(seed: int, jobs: int):
     # Untuned, sensible defaults. Scaling sits inside the pipeline so it is fit on training folds only.
     return {
@@ -29,7 +36,7 @@ def models(seed: int, jobs: int):
         # KNN stores the training set and is slow to query, so it is fit on a seeded 150k-row sample.
         "knn": (make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=25, weights="distance", n_jobs=jobs)), 150_000),
         "random_forest": (RandomForestClassifier(n_estimators=150, min_samples_leaf=5, n_jobs=jobs, random_state=seed), None),
-        "lightgbm": (LGBMClassifier(n_estimators=400, learning_rate=0.05, num_leaves=63, random_state=seed, n_jobs=jobs, verbose=-1), None),
+        "lightgbm": (lambda: _lgbm(n_estimators=400, learning_rate=0.05, num_leaves=63, random_state=seed, n_jobs=jobs, verbose=-1), None),
         "mlp": (make_pipeline(StandardScaler(), MLPClassifier(hidden_layer_sizes=(64, 32), early_stopping=True, max_iter=200, random_state=seed)), None),
     }
 
@@ -41,6 +48,8 @@ def main():
     a = ap.parse_args()
     cfg = load_config()
     model, sub = models(cfg["seed"], a.jobs)[a.model]
+    if not hasattr(model, "fit"):  # lazily built (LightGBM)
+        model = model()
     run(a.model, model, cfg, cfg["paths"]["results"] / "models", fit_subsample=sub)
 
 
