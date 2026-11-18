@@ -21,13 +21,13 @@ itself; a UI on laptop 2 lets the evaluator pick one of the ten reserved trips a
 | 2 | Labels and candidate generation | Vivian | 4 | 0 | ✅ |
 | 3 | Feature engineering | Vivian, Chirag | 3 | 0 | ✅ |
 | 4 | Model experiments (five or more models) | Chirag, Vivian | 7 | 0 | ✅ |
-| 5 | Bayesian hyperparameter optimisation | Vivian | 0 | 3 | ❌ |
+| 5 | Bayesian hyperparameter optimisation | Vivian | 3 | 0 | ✅ |
 | 6 | HMM and Viterbi decoding | Vivian | 5 | 0 | ✅ |
 | 7 | Folium maps and plots | Harsimran | 3 | 1 | ❌ |
 | 8 | API | Chirag, Vivian | 4 | 0 | ✅ |
 | 9 | UI | Chiranthan | 3 | 0 | ✅ |
 | 10 | Integration, README and report | Everyone | 1 | 5 | ❌ |
-| | **Total** | | **39** | **9** | |
+| | **Total** | | **42** | **6** | |
 
 ## Share of work
 
@@ -113,9 +113,9 @@ Student-test trips are used only for comparison, never for fitting.
 
 | Status | Task | Owner | Where |
 |---|---|---|---|
-| ❌ | Optuna TPE search on the chosen model, grouped CV objective, search space in config (running on the Mac mini, 30 trials) | Vivian | `scripts/tune.py`, `configs/search_space.yaml` |
-| ❌ | Trial record saved (every trial's parameters and score) | Vivian | `results/hpo/` |
-| ❌ | Tuned against untuned on the same folds and student test | Vivian | `results/hpo/` |
+| ✅ | Optuna TPE search on the chosen model, grouped CV objective, search space in config (32 complete trials) | Vivian | `scripts/tune.py`, `configs/search_space.yaml` |
+| ✅ | Trial record saved (every trial's parameters and score) | Vivian | `results/hpo/` |
+| ✅ | Tuned against untuned on the same folds and student test | Vivian | `results/hpo/` |
 
 ## Phase 6: HMM and Viterbi decoding
 
