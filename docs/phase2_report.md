@@ -1,9 +1,10 @@
 # PathSnap: phase 2 report
 
-Candidate tuning, Bayesian hyperparameter optimisation, HMM/Viterbi route reconstruction, a feature
-ablation and the first end-to-end API run. Every number is copied from the file named with its table.
-Partitions: CV = 5-fold GroupKFold by trip on the 80 training trips; test = the 10 student-test trips.
-Evaluator trips were not used for anything.
+Everything after phase 1: candidate tuning, Bayesian hyperparameter optimisation, a feature ablation,
+HMM/Viterbi route reconstruction, error analysis, the final model and the end-to-end API runs. Every
+number is copied from the file named with its table. Partitions: CV = 5-fold GroupKFold by trip on the 80
+training trips; test = the 10 student-test trips. Evaluator trips were used only for the final smoke test
+in section 10, with scoring disabled.
 
 ## 1. Candidate radius and k
 
@@ -131,3 +132,138 @@ All 10 requests returned HTTP 200. Pooled Top-1 over all 19,160 points is 0.8863
 is 0.8722, in line with the offline evaluation. The weakest trip is `00000077` (Top-1 0.7387) despite high
 continuity, which suggests the decoder follows a consistent but wrong parallel road for part of that trip;
 it is the first candidate for a map-based error analysis.
+
+## 6. Bayesian optimisation on the final 15 features
+
+Sections 2 and 3 used different feature sets, so we repeated the search on the final 15 features with the
+same search space, objective and folds (`--study lightgbm_f15`; `results/hpo/trials_lightgbm_f15.csv`).
+All 32 trials completed. Trial 0 is the untuned configuration; it scored
+0.8981 CV macro F1, matching the separate untuned run (0.8980), which
+checks that the search and the comparison harness measure the same thing.
+
+Best trial (10): n_estimators 657, learning_rate 0.0127, num_leaves 228,
+min_child_samples 78, subsample 0.823, colsample_bytree 0.633,
+reg_lambda 0.1300, reg_alpha 0.0024. It took 98 s for 5 folds on the Mac mini.
+
+From `results/models/lightgbm_15feat.json` and `lightgbm_f15_tuned.json`:
+
+| LightGBM, 15 features | CV macro F1 | CV log loss | Test accuracy | Test macro F1 | Test Top-1 | Test log loss |
+|---|---|---|---|---|---|---|
+| Untuned | 0.8980 ± 0.0279 | 0.1315 | 0.9545 | 0.9178 | 0.8667 | 0.1098 |
+| Tuned | 0.9009 ± 0.0261 | 0.1286 | 0.9546 | 0.9178 | 0.8658 | 0.1100 |
+
+The result repeats section 2: CV improves slightly (macro F1 +0.0029, log loss
+0.1315 to 0.1286) and the student-test scores are unchanged. Tuning gives no
+measurable gain on new trips. We still use the tuned parameters in the final model because the selection
+rule is the CV objective, decided before looking at test results.
+
+## 7. Error analysis and a U-turn penalty
+
+We broke down the decoder's student-test errors by type (`scripts/error_analysis.py`). The left column is
+the decoder from section 4 (12-feature LightGBM, β × w = 100):
+
+| Share of student-test points | Decoder from section 4 | With U-turn penalty (below) |
+|---|---|---|
+| Correct | 88.77% | 90.59% |
+| Right road, wrong direction | 5.61% | 3.61% |
+| Off the route, next to the reference arc | 2.83% | 2.88% |
+| Another arc of the reference route | 1.36% | 1.46% |
+| Any other arc | 1.44% | 1.46% |
+
+Half the errors were the reverse arc of a two-way road. In 66.29% of those, the
+reference arc points against the direction the GPS shows the vehicle moving (cosine below -0.5). Across all
+moving student-test points (over 2 m/s), 7.42% have a reference arc pointing
+against the motion. We read this as a limitation of the reference routes, as the dataset notes warn, not
+as something the model should learn from the arc ids: the reference picks the lower or higher arc id of a
+two-way pair about equally often.
+
+The decoder switched direction on the same road segment too easily, so we added a U-turn penalty: a fixed
+amount subtracted from the log-transition score when consecutive states move from an arc to its own
+reverse. Only β × w and the penalty divided by w matter, so w = 1. Grid on the training trips' out-of-fold
+probabilities (untuned 15-feature LightGBM), β = 100, from `results/hmm/hmm_vs_classifier_f15.json`:
+
+| U-turn penalty | Train Top-1 | Train route continuity | Train route arc F1 |
+|---|---|---|---|
+| 0 | 0.7669 | 0.8530 | 0.8724 |
+| 2 | 0.7809 | 0.7966 | 0.8888 |
+| 5 | 0.7839 | 0.7825 | 0.8902 |
+| 10 | 0.7855 | 0.7803 | 0.8901 |
+
+The selection rule (training Top-1) picks β = 100 with penalty 10. On the student-test trips:
+
+| Student test | Classifier only | Classifier + HMM with U-turn penalty |
+|---|---|---|
+| Top-1 accuracy | 0.8667 | 0.9059 |
+| Top-1, either direction counted correct | 0.9266 | 0.9421 |
+| Route continuity | 0.7788 | 0.8096 |
+| Route arc F1 | 0.8581 | 0.9019 |
+
+**Trade-off.** The penalty raises Top-1 but lowers route continuity (training 0.8530 at penalty 0, 0.7803 at 10).
+Following the reference's direction choices produces consecutive arcs that do not join end to end, because
+the reference itself does not join there. We select on Top-1, the metric the guidelines define, and report
+continuity alongside it. The direction-agnostic Top-1 is reported as a secondary metric only.
+
+## 8. Leaving trip 00000054 out of training
+
+Trip `00000054` causes most of the training candidate misses (section 1). We retrained with it left out of
+model fitting (it is still scored), same grid, from `results/hmm/hmm_vs_classifier_f15_excl54.json`:
+
+| Student test | All 80 trips | Without 00000054 |
+|---|---|---|
+| Classifier-only Top-1 | 0.8667 | 0.8664 |
+| HMM Top-1 | 0.9059 | 0.9109 |
+| HMM route continuity | 0.8096 | 0.8106 |
+
+The classifier is unchanged and the decoded Top-1 moves by half a point, within the noise we see elsewhere.
+We keep all 80 training trips.
+
+## 9. Final model and end-to-end run
+
+The final model is tuned LightGBM on 15 features (section 6) with the HMM decoder at β = 100, w = 1 and
+U-turn penalty 10, exported as `artifacts/lightgbm_f15_tuned_uturn10.joblib`. Every choice above was made
+on the training trips (CV or out-of-fold) or, for model comparison, the student-test trips.
+
+All 10 student-test trips through the FastAPI app, from `results/e2e/api_student_test_lightgbm_f15_tuned_uturn10.json`
+(Top-1 and continuity per trip) compared with the section 5 run:
+
+| Trip | Points | Top-1 (section 5) | Top-1 (final) | Continuity (section 5) | Continuity (final) |
+|---|---|---|---|---|---|
+| 00000000 | 2503 | 0.9565 | 0.9561 | 0.8987 | 0.8426 |
+| 00000007 | 1354 | 0.9830 | 0.9948 | 0.9851 | 0.9756 |
+| 00000009 | 1049 | 0.8818 | 0.8818 | 0.8232 | 0.7950 |
+| 00000040 | 2995 | 0.9329 | 0.9332 | 0.9107 | 0.8301 |
+| 00000052 | 262 | 0.9924 | 0.9924 | 0.9036 | 0.9036 |
+| 00000056 | 3958 | 0.9224 | 0.9325 | 0.8649 | 0.8507 |
+| 00000065 | 768 | 0.8477 | 0.8594 | 0.8486 | 0.7881 |
+| 00000076 | 1486 | 0.8970 | 0.9145 | 0.7931 | 0.7653 |
+| 00000077 | 3911 | 0.7387 | 0.8136 | 0.9125 | 0.6060 |
+| 00000091 | 874 | 0.8627 | 0.8902 | 0.7811 | 0.7457 |
+| **Pooled / mean** | 19160 | 0.8863 | **0.9076** | 0.8722 | 0.8103 |
+
+Pooled Top-1 rises from 0.8863 to 0.9076; the weakest trip, `00000077`, rises from
+0.7387 to 0.8136. Mean continuity falls, as explained in section 7.
+
+A fresh clone of the repository, a new environment from `requirements.txt`, the feature build, the model
+export and all 10 student-test API calls reproduced the section 5 pooled Top-1 exactly (0.8863), so results
+come from the repository alone.
+
+## 10. Evaluator trips: smoke test only
+
+The 10 evaluator trips were received after the final model was committed. They were used once, to check
+that the system works on every trip (`scripts/evaluator_smoke_test.py`, `results/e2e/evaluator_smoke_test.json`).
+The API's scorer was replaced by a stub, so reference routes were not read and no accuracy was computed.
+All 10 trips returned HTTP 200 with a predicted route; runtimes were 0.18 to
+2.05 s per trip. In trip 00000015, 21 of 6854 points have no road arc within 50 m and
+get no prediction. Nothing about the model or decoder was changed after this check.
+
+## 11. Summary and limitations
+
+- Final pipeline: candidates within 50 m (k = 8), 15 features, tuned LightGBM, HMM/Viterbi with
+  β × w = 100 and a U-turn penalty of 10. Student-test Top-1 through the API: 0.9076.
+- The HMM is the largest single gain over the classifier (section 4 and 7).
+- Bayesian optimisation and leaving out trip 00000054 gave no measurable gain; we report both as negative
+  results.
+- Part of the remaining error is in the reference routes themselves: arcs pointing against the vehicle's
+  motion on two-way roads. This also caps route continuity.
+- Fit and inference times in different files come from two machines (laptop and Mac mini) and are only
+  comparable within one machine.
