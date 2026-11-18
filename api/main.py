@@ -46,8 +46,12 @@ def create_app(evaluation_dir: Path | None, *, predict: Predictor | None = None,
     async def log_requests(request: Request, call_next):
         start = perf_counter()
         response = await call_next(request)
-        logger.info("%s %s %d %.1f ms", request.method, request.url.path,
-                    response.status_code, (perf_counter() - start) * 1000)
+        route = request.scope.get("route")
+        operation = {
+            "trips": "GET /trips",
+            "predict_trip": "POST /predict/{trip_id}",
+        }.get(getattr(route, "name", None), "other request")
+        logger.info("%s %d %.1f ms", operation, response.status_code, (perf_counter() - start) * 1000)
         return response
 
     def trip_dirs():
@@ -76,7 +80,7 @@ def create_app(evaluation_dir: Path | None, *, predict: Predictor | None = None,
         trip = load_trip(trip_dir, include_route=False)
         arc_ids = [int(arc) for arc in predict(trip)]
         if len(arc_ids) != len(trip.track) or any(arc < -1 or arc >= len(trip.arcs) for arc in arc_ids):
-            logger.error("Invalid prediction for trip %s", trip_id)
+            logger.error("Invalid prediction returned by the model")
             raise HTTPException(500, "Invalid prediction")
 
         segments = []

@@ -40,7 +40,8 @@ def test_prediction_keeps_reference_out_of_predictor_and_response(tmp_path, capl
         "trip_id": "001", "gps": [[49.0, 8.0]], "scores": {"accuracy": 1.0},
         "route": [[[49.0, 8.0], [49.1, 8.1]]],
     }
-    assert "POST /predict/001 200" in caplog.text
+    assert "POST /predict/{trip_id} 200" in caplog.text
+    assert "/predict/001" not in caplog.text
     assert TestClient(create_app(tmp_path)).post("/predict/001").status_code == 503
 
 
