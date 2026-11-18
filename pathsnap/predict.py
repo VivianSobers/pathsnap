@@ -31,6 +31,7 @@ def predict_trip(trip, artifact):
         candidates["t_along"].to_numpy(), probabilities, px, py, trip.track["t"].to_numpy(),
         nx, ny, trip.arcs[["from_node", "to_node"]].to_numpy(),
         split_s=artifact["split_s"], beta=artifact["beta_m"],
+        uturn_penalty=artifact.get("uturn_penalty", 0.0),
     )
     output = np.full(len(trip.track), -1, dtype=int)
     for observation, arc in chosen.items():
