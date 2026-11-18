@@ -18,16 +18,16 @@ itself; a UI on laptop 2 lets the evaluator pick one of the ten reserved trips a
 |---|---|---|---|---|---|
 | 0 | Repository and environment | Vivian | 3 | 0 | ✅ |
 | 1 | Data loading and EDA | Harsimran, Vivian | 6 | 0 | ✅ |
-| 2 | Labels and candidate generation | Vivian | 3 | 1 | ❌ |
+| 2 | Labels and candidate generation | Vivian | 4 | 0 | ✅ |
 | 3 | Feature engineering | Vivian, Chirag | 3 | 0 | ✅ |
-| 4 | Model experiments (five or more models) | Chirag, Vivian | 6 | 1 | ❌ |
+| 4 | Model experiments (five or more models) | Chirag, Vivian | 7 | 0 | ✅ |
 | 5 | Bayesian hyperparameter optimisation | Vivian | 0 | 3 | ❌ |
-| 6 | HMM and Viterbi decoding | Vivian | 0 | 5 | ❌ |
+| 6 | HMM and Viterbi decoding | Vivian | 5 | 0 | ✅ |
 | 7 | Folium maps and plots | Harsimran | 3 | 1 | ❌ |
-| 8 | API | Chirag, Vivian | 0 | 4 | ❌ |
+| 8 | API | Chirag, Vivian | 4 | 0 | ✅ |
 | 9 | UI | Chiranthan | 3 | 0 | ✅ |
 | 10 | Integration, README and report | Everyone | 1 | 5 | ❌ |
-| | **Total** | | **28** | **20** | |
+| | **Total** | | **39** | **9** | |
 
 ## Share of work
 
@@ -82,7 +82,7 @@ The `.route` file has no timestamps, so each GPS observation needs a reference a
 | ✅ | Point-to-segment distance and projection on the arc | Vivian | `pathsnap/geo.py` |
 | ✅ | Monotone alignment of observations to route arcs (dynamic programming over the route order) | Vivian | `pathsnap/labels.py` |
 | ✅ | Candidate arcs within a radius using a spatial index, keep the k nearest | Vivian | `pathsnap/candidates.py` |
-| ❌ | Candidate miss rate against radius and k, used to choose both | Vivian | `scripts/candidate_sweep.py`, `results/candidates/` |
+| ✅ | Candidate miss rate against radius and k, used to choose both (kept 50 m / k=8, see `results/candidates/sweep.csv`) | Vivian | `scripts/candidate_sweep.py`, `results/candidates/` |
 
 ## Phase 3: Feature engineering
 
@@ -107,13 +107,13 @@ Student-test trips are used only for comparison, never for fitting.
 | ✅ | KNN (distance-weighted) | Chirag | `scripts/train_models.py` |
 | ✅ | Random Forest | Vivian | `scripts/train_models.py` |
 | ✅ | LightGBM and MLP (selected: LightGBM, see `docs/phase1_report.md`) | Vivian | `scripts/train_models.py` |
-| ❌ | Comparison table (done, `results/models/comparison.csv`) and plots: CV Macro F1, student-test Top-1 and Macro F1, log loss, inference time | Chirag | `scripts/compare_models.py`, `results/models/` |
+| ✅ | Comparison table (`results/models/comparison.csv`) and plots (`comparison.png`): CV Macro F1, student-test Top-1 and Macro F1, log loss, inference time | Chirag | `scripts/compare_models.py`, `results/models/` |
 
 ## Phase 5: Bayesian hyperparameter optimisation
 
 | Status | Task | Owner | Where |
 |---|---|---|---|
-| ❌ | Optuna TPE search on the chosen model, grouped CV objective, search space in config | Vivian | `scripts/tune.py`, `configs/search_space.yaml` |
+| ❌ | Optuna TPE search on the chosen model, grouped CV objective, search space in config (running on the Mac mini, 30 trials) | Vivian | `scripts/tune.py`, `configs/search_space.yaml` |
 | ❌ | Trial record saved (every trial's parameters and score) | Vivian | `results/hpo/` |
 | ❌ | Tuned against untuned on the same folds and student test | Vivian | `results/hpo/` |
 
@@ -121,11 +121,11 @@ Student-test trips are used only for comparison, never for fitting.
 
 | Status | Task | Owner | Where |
 |---|---|---|---|
-| ❌ | Hidden states are candidate arcs per observation; emissions from classifier probabilities | Vivian | `pathsnap/hmm.py` |
-| ❌ | Transitions from network shortest-path distance against straight-line distance | Vivian | `pathsnap/hmm.py` |
-| ❌ | Viterbi in log space; split decoding at large gaps; handle empty candidate sets and broken chains | Vivian | `pathsnap/hmm.py`, `tests/test_hmm.py` |
-| ❌ | Decoder parameter tuning on training and student-test trips only | Vivian | `scripts/tune_decoder.py` |
-| ❌ | Classifier-only against classifier plus HMM: Top-1, route continuity, sequence-level scores | Vivian | `results/hmm/` |
+| ✅ | Hidden states are candidate arcs per observation; emissions from classifier probabilities | Vivian | `pathsnap/hmm.py` |
+| ✅ | Transitions from network shortest-path distance against straight-line distance | Vivian | `pathsnap/hmm.py` |
+| ✅ | Viterbi in log space; split decoding at large gaps; handle empty candidate sets and broken chains | Vivian | `pathsnap/hmm.py`, `tests/test_hmm.py` |
+| ✅ | Decoder parameter tuning on training trips only (out-of-fold probabilities) | Vivian | `scripts/hmm_eval.py` |
+| ✅ | Classifier-only against classifier plus HMM: Top-1, route continuity, sequence-level scores | Vivian | `results/hmm/` |
 
 ## Phase 7: Folium maps and plots
 
@@ -143,10 +143,10 @@ prediction pipeline.
 
 | Status | Task | Owner | Where |
 |---|---|---|---|
-| ❌ | Model and artifact export (classifier, preprocessing, HMM config) | Vivian | `scripts/export.py`, `artifacts/` |
-| ❌ | FastAPI app: `GET /trips`, `POST /predict/{trip_id}` returning route and scores | Chirag | `api/` |
-| ❌ | Server-side scoring against reference routes, kept apart from prediction code | Vivian | `api/evaluate.py` |
-| ❌ | Request logging visible in the terminal; API tests | Chirag | `api/`, `tests/test_api.py` |
+| ✅ | Model and artifact export (classifier, preprocessing, HMM config) | Vivian | `scripts/export_model.py`, `pathsnap/predict.py` |
+| ✅ | FastAPI app: `GET /trips`, `POST /predict/{trip_id}` returning route and scores | Chirag | `api/` |
+| ✅ | Server-side scoring against reference routes, kept apart from prediction code | Vivian | `api/evaluate.py` |
+| ✅ | Request logging visible in the terminal; API tests | Chirag | `api/`, `tests/test_api.py` |
 
 ## Phase 9: UI
 
