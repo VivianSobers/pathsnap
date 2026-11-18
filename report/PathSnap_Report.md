@@ -39,13 +39,15 @@
 - **Result.** The HMM raised student-test Top-1 from 0.8651
   to 0.8877 over the classifier alone (12 features, no U-turn
   penalty). With 15 features, the tuned model and the U-turn penalty, the final pipeline through the API scores a pooled Top-1 of 0.9076 on the 10 student-test trips.
+- **Final evaluator result.** On the 10 evaluator trips, scored once with the committed final model, pooled
+  Top-1 is 0.9244 and mean route continuity 0.7680 (section 7.5).
 - **Negative results, reported as such.** Bayesian optimisation and dropping the noisiest training trip gave
   no measurable gain.
 
 Every number in this report is generated from a file in `results/` by `report/build_report.py`. Partitions
 used: **train** = 80 training trips (fitting and grouped cross-validation), **student test** = 10
-student-testing trips (development-stage comparison). The 10 evaluator trips were not used for any
-analysis, training or choice (sections 7.3 and 7.4).
+student-testing trips (development-stage comparison). The 10 evaluator trips were not used for training
+or for any choice; they were scored once, with the final committed model, for section 7.5.
 
 ## Contents
 
@@ -431,16 +433,16 @@ All 10 student-test trips through the API with the final model
 
 | Trip | Points | Top-1 | Route continuity | Runtime (s) |
 |---|---|---|---|---|
-| 00000000 | 2,503 | 0.9561 | 0.8426 | 2.12 |
-| 00000007 | 1,354 | 0.9948 | 0.9756 | 0.92 |
-| 00000009 | 1,049 | 0.8818 | 0.7950 | 1.37 |
-| 00000040 | 2,995 | 0.9332 | 0.8301 | 1.84 |
-| 00000052 | 262 | 0.9924 | 0.9036 | 0.22 |
-| 00000056 | 3,958 | 0.9325 | 0.8507 | 3.41 |
-| 00000065 | 768 | 0.8594 | 0.7881 | 0.80 |
-| 00000076 | 1,486 | 0.9145 | 0.7653 | 2.32 |
-| 00000077 | 3,911 | 0.8136 | 0.6060 | 3.03 |
-| 00000091 | 874 | 0.8902 | 0.7457 | 0.87 |
+| 00000000 | 2,503 | 0.9561 | 0.8426 | 0.83 |
+| 00000007 | 1,354 | 0.9948 | 0.9756 | 0.44 |
+| 00000009 | 1,049 | 0.8818 | 0.7950 | 0.53 |
+| 00000040 | 2,995 | 0.9332 | 0.8301 | 1.09 |
+| 00000052 | 262 | 0.9924 | 0.9036 | 0.16 |
+| 00000056 | 3,958 | 0.9325 | 0.8507 | 1.73 |
+| 00000065 | 768 | 0.8594 | 0.7881 | 0.42 |
+| 00000076 | 1,486 | 0.9145 | 0.7653 | 1.17 |
+| 00000077 | 3,911 | 0.8136 | 0.6060 | 1.49 |
+| 00000091 | 874 | 0.8902 | 0.7457 | 0.42 |
 | **Pooled / mean** | 19,160 | **0.9076** | 0.8103 | |
 
 A fresh clone with a new environment reproduced the earlier end-to-end Top-1 exactly, so results come from
@@ -473,16 +475,44 @@ listing the ten evaluator trips.*
 
 *Trip 00000023: predicted route (blue) over the GPS points (red), with the scores returned by laptop 1.*
 
-<img alt="API terminal on laptop 1" src="figures/api_terminal_predict.png" style="width:58%">
+<img alt="API terminal on laptop 1" src="figures/api_terminal_predict.png" style="width:48%">
 
 
 *API terminal on laptop 1. Every request is logged, including `GET /trips` and
 `POST /predict/00000023` from laptop 2 (`10.30.200.139`).*
 
+### 7.5 Final scores on the evaluator trips
+
+All 10 evaluator trips through the API with the final model and server-side scoring
+(`scripts/api_e2e.py`, `results/e2e/api_evaluator_test_lightgbm_f15_tuned_uturn10.json`, commit
+`c96bedb`). This ran once, after the model, decoder settings and report content were final. The same
+script reproduces the student-test numbers in section 7.2 exactly. Nothing was changed after this run.
+
+| Trip | Points | Top-1 | Route continuity | Runtime (s) |
+|---|---|---|---|---|
+| 00000015 | 6,854 | 0.8672 | 0.3688 | 2.26 |
+| 00000017 | 1,346 | 0.9264 | 0.6882 | 1.16 |
+| 00000023 | 458 | 0.9454 | 0.7500 | 0.22 |
+| 00000030 | 654 | 0.8517 | 0.6964 | 0.44 |
+| 00000049 | 2,642 | 0.9936 | 0.9450 | 0.97 |
+| 00000059 | 1,031 | 0.9641 | 0.7735 | 0.66 |
+| 00000067 | 916 | 0.9563 | 0.8481 | 0.35 |
+| 00000073 | 1,144 | 0.9781 | 0.9098 | 0.54 |
+| 00000087 | 1,399 | 0.9907 | 0.9614 | 1.01 |
+| 00000094 | 3,230 | 0.9307 | 0.7387 | 1.25 |
+| **Pooled / mean** | 19,674 | **0.9244** | 0.7680 | |
+
+Pooled Top-1 on the evaluator trips (0.9244) is close to the student-test figure
+(0.9076), so the model holds up on trips it has never seen. Mean route continuity
+is lower (0.7680 against 0.8103), mostly because of
+trip 00000015, the longest trip, at 0.3688. We did not
+investigate it, so that the evaluator trips stay out of development.
+
 ## 8. Conclusions and limitations
 
 - Final pipeline: 50 m / k = 8 candidates, 15 features, tuned LightGBM, HMM/Viterbi with β = 100 and a
-  U-turn penalty of 10. Student-test Top-1 through the API: 0.9076.
+  U-turn penalty of 10. Top-1 through the API: 0.9076 on the student-test trips
+  and 0.9244 on the evaluator trips.
 - The HMM gives the largest gain over the classifier alone. Bayesian optimisation and dropping the noisiest
   training trip gave no measurable gain; we report both as negative results.
 - Part of the remaining error lies in the reference routes (arcs pointing against the vehicle's motion),

@@ -41,6 +41,7 @@ hmm12, hmmw, hmm15, hmmx = (J("hmm/hmm_vs_classifier.json"), J("hmm/hmm_vs_class
 ea_old, ea_new = J("hmm/error_analysis_wide.json"), J("hmm/error_analysis_f15.json")
 e2e = J("e2e/api_student_test_lightgbm_f15_tuned_uturn10.json")
 smoke = J("e2e/evaluator_smoke_test.json")
+ev = J("e2e/api_evaluator_test_lightgbm_f15_tuned_uturn10.json")
 mins = inf["models"]
 
 NAME = {"logreg": "Logistic Regression", "gaussian_nb": "Gaussian Naive Bayes", "knn": "K-Nearest Neighbours",
@@ -183,13 +184,15 @@ md = f"""<div align="center" style="text-align:center;padding-top:12mm">
 - **Result.** The HMM raised student-test Top-1 from {f4(hmm12['student_test']['classifier_only']['top1_accuracy'])}
   to {f4(hmm12['student_test']['hmm']['top1_accuracy'])} over the classifier alone (12 features, no U-turn
   penalty). With 15 features, the tuned model and the U-turn penalty, the final pipeline through the API scores a pooled Top-1 of {f4(e2e['pooled_top1_accuracy'])} on the 10 student-test trips.
+- **Final evaluator result.** On the 10 evaluator trips, scored once with the committed final model, pooled
+  Top-1 is {f4(ev['pooled_top1_accuracy'])} and mean route continuity {f4(ev['mean_route_continuity'])} (section 7.5).
 - **Negative results, reported as such.** Bayesian optimisation and dropping the noisiest training trip gave
   no measurable gain.
 
 Every number in this report is generated from a file in `results/` by `report/build_report.py`. Partitions
 used: **train** = 80 training trips (fitting and grouped cross-validation), **student test** = 10
-student-testing trips (development-stage comparison). The 10 evaluator trips were not used for any
-analysis, training or choice (sections 7.3 and 7.4).
+student-testing trips (development-stage comparison). The 10 evaluator trips were not used for training
+or for any choice; they were scored once, with the final committed model, for section 7.5.
 
 ## Contents
 
@@ -505,16 +508,35 @@ listing the ten evaluator trips.*
 
 *Trip 00000023: predicted route (blue) over the GPS points (red), with the scores returned by laptop 1.*
 
-<img alt="API terminal on laptop 1" src="figures/api_terminal_predict.png" style="width:58%">
+<img alt="API terminal on laptop 1" src="figures/api_terminal_predict.png" style="width:48%">
 
 
 *API terminal on laptop 1. Every request is logged, including `GET /trips` and
 `POST /predict/00000023` from laptop 2 (`10.30.200.139`).*
 
+### 7.5 Final scores on the evaluator trips
+
+All 10 evaluator trips through the API with the final model and server-side scoring
+(`scripts/api_e2e.py`, `results/e2e/api_evaluator_test_lightgbm_f15_tuned_uturn10.json`, commit
+`{ev['commit']}`). This ran once, after the model, decoder settings and report content were final. The same
+script reproduces the student-test numbers in section 7.2 exactly. Nothing was changed after this run.
+
+| Trip | Points | Top-1 | Route continuity | Runtime (s) |
+|---|---|---|---|---|
+""" + "\n".join(f"| {t['trip']} | {t['n_points']:,} | {f4(t['top1_accuracy'])} | {f4(t['route_continuity'])} | {t['runtime_s']:.2f} |" for t in ev['trips']) + f"""
+| **Pooled / mean** | {sum(t['n_points'] for t in ev['trips']):,} | **{f4(ev['pooled_top1_accuracy'])}** | {f4(ev['mean_route_continuity'])} | |
+
+Pooled Top-1 on the evaluator trips ({f4(ev['pooled_top1_accuracy'])}) is close to the student-test figure
+({f4(e2e['pooled_top1_accuracy'])}), so the model holds up on trips it has never seen. Mean route continuity
+is lower ({f4(ev['mean_route_continuity'])} against {f4(e2e['mean_route_continuity'])}), mostly because of
+trip 00000015, the longest trip, at {f4(min(t['route_continuity'] for t in ev['trips']))}. We did not
+investigate it, so that the evaluator trips stay out of development.
+
 ## 8. Conclusions and limitations
 
 - Final pipeline: 50 m / k = 8 candidates, 15 features, tuned LightGBM, HMM/Viterbi with β = 100 and a
-  U-turn penalty of 10. Student-test Top-1 through the API: {f4(e2e['pooled_top1_accuracy'])}.
+  U-turn penalty of 10. Top-1 through the API: {f4(e2e['pooled_top1_accuracy'])} on the student-test trips
+  and {f4(ev['pooled_top1_accuracy'])} on the evaluator trips.
 - The HMM gives the largest gain over the classifier alone. Bayesian optimisation and dropping the noisiest
   training trip gave no measurable gain; we report both as negative results.
 - Part of the remaining error lies in the reference routes (arcs pointing against the vehicle's motion),
