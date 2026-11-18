@@ -432,9 +432,30 @@ system works on every trip (`scripts/evaluator_smoke_test.py`, `results/e2e/eval
 scorer was replaced by a stub, so no reference route was read and no accuracy was computed. All
 {smoke['valid']} trips returned a predicted route. Nothing was changed after this check.
 
-### 7.4 Screenshots
+### 7.4 Two-laptop run
 
-UI and API terminal screenshots from the two-laptop run: `report/figures/` (added after the rehearsal).
+On 18 November 2026 the API ran on laptop 1 (Fedora, `10.30.202.250:8000`) and the UI on laptop 2
+(Windows, `10.30.200.139:8080`), both on the campus Wi-Fi. The UI listed the ten evaluator trips and ran
+trip 00000023 end to end, with scoring done on laptop 1. This was after the final model was committed,
+and nothing was changed because of it.
+
+The first attempt failed with "Cannot reach the API" even though the requests were reaching laptop 1. The
+UI page had been opened from a different address from the one the API allows (CORS). Opening the UI at
+laptop 2's network address, the origin set in `PATHSNAP_UI_ORIGIN`, fixed it.
+
+![UI on laptop 2 connected to the API on laptop 1](figures/ui_connectivity.png)
+
+*UI on laptop 2 (address bar: `10.30.200.139:8080`) connected to the API on laptop 1 (`10.30.202.250:8000`),
+listing the ten evaluator trips.*
+
+![Predicted route and scores for trip 00000023](figures/ui_route_and_scores.png)
+
+*Trip 00000023: predicted route (blue) over the GPS points (red), with the scores returned by laptop 1.*
+
+![API terminal on laptop 1](figures/api_terminal_predict.png)
+
+*API terminal on laptop 1. Every request is logged, including `GET /trips` and
+`POST /predict/00000023` from laptop 2 (`10.30.200.139`).*
 
 ## 8. Conclusions and limitations
 
