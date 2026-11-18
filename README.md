@@ -25,9 +25,9 @@ Run the tests with `python -m pytest`.
 All settings (seed, paths, candidate radius, folds) are in `configs/default.yaml`.
 
 ```
-python scripts/build_features.py                  # writes data/interim/ and results/candidates/
-python scripts/train_models.py --model lightgbm   # one run per model, writes results/models/<model>.json
-python scripts/compare_models.py                  # writes results/models/comparison.{csv,md}
+python -m scripts.build_features                  # writes data/interim/ and results/candidates/
+python -m scripts.train_models --model lightgbm   # one run per model, writes results/models/<model>.json
+python -m scripts.compare_models                  # writes results/models/comparison.{csv,md,png}
 ```
 
 Model names: `logreg`, `gaussian_nb`, `knn`, `random_forest`, `lightgbm`, `mlp`.
@@ -40,14 +40,18 @@ be on the same network.
 ### Laptop 1: API
 
 1. Find its IP address: `ipconfig` on Windows (the IPv4 address of the active adapter).
-2. Start the server so that other machines can reach it:
+2. Build the features and export the chosen model from training data. Point the API to that local
+   artifact, the evaluator-supplied trip directory, and the actual origin of the UI open on laptop 2.
 
-   ```
-   uvicorn api.main:app --host 0.0.0.0 --port 8000
+   ```powershell
+   python -m scripts.export_model --model random_forest
+   $env:PATHSNAP_MODEL_ARTIFACT = (Resolve-Path artifacts/model.joblib).Path
+   $env:PATHSNAP_EVALUATION_DIR = 'C:\path\to\reserved-trips'
+   $env:PATHSNAP_UI_ORIGIN = 'http://localhost:8080'
+   python -m uvicorn api.main:app --host 0.0.0.0 --port 8000
    ```
 
-   > The API is not implemented yet (`api/main.py` is a stub); this command is the expected one and must be
-   > confirmed once it lands.
+   For development only, use `data/raw/Student folder/student_test` as the trip directory.
 3. Allow the port through the firewall (Windows, run once as administrator):
 
    ```
@@ -71,7 +75,8 @@ tiles. The API contract the UI expects is in [ui/README.md](ui/README.md).
 1. From laptop 2, open `http://<laptop-1-ip>:8000/trips` in a browser. A JSON list means the network path
    works.
 2. If it times out, check the firewall rule and that both laptops are on the same network.
-3. If the UI shows "Cannot reach the API" but the step above works, the API is missing CORS headers.
+3. If the UI shows "Cannot reach the API" but the step above works, check that
+   `PATHSNAP_UI_ORIGIN` matches the UI URL, including its scheme, hostname and port.
 
 ## Repository layout
 

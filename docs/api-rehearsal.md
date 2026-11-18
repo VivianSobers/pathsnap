@@ -2,8 +2,9 @@
 
 ## Integrate the team’s prediction pipeline
 
-Build the production app with `api.main.create_app`. Supply the reserved trip
-directory, a predictor, a scorer, and the UI’s exact HTTP origin.
+Run the configured app as described in the [two-laptop setup](../README.md#run-on-two-laptops).
+It loads the exported classifier, runs Viterbi decoding, and scores the result
+using the reserved reference route on the API laptop.
 
 - The predictor receives a `Trip` containing the GPS track and road network.
   Its `route` field is always `None`. Return one arc ID per observation, with
