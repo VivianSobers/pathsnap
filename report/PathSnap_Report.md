@@ -540,7 +540,7 @@ listing the ten evaluator trips.*
 
 All 10 evaluator trips through the API with the final model and server-side scoring
 (`scripts/api_e2e.py`, `results/e2e/api_evaluator_test_lightgbm_f15_tuned_uturn10.json`, commit
-`c96bedb`). This ran once, after the model, decoder settings and report content were final. The same
+`c96bedb`). This ran once, after the model and decoder settings were final. The same
 script reproduces the student-test numbers in section 7.2 exactly. Nothing was changed after this run.
 
 | Trip | Points | Top-1 | Route continuity | Runtime (s) |
