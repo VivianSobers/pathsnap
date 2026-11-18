@@ -1,0 +1,79 @@
+{
+  "predictions": "results/hmm/student_test_predictions_wide.json",
+  "observations": 19160,
+  "share": {
+    "correct": 0.8876826722338205,
+    "reverse_direction": 0.05605427974947808,
+    "adjacent_off_route": 0.02834029227557411,
+    "other_off_route": 0.014352818371607515,
+    "other_route_arc": 0.013569937369519834
+  },
+  "reverse_errors_with_reference_against_motion": 0.6629422718808193,
+  "reference_arc_against_motion_share_moving_points": 0.07420166229221348,
+  "per_trip": {
+    "00000000": {
+      "correct": 2391,
+      "other_route_arc": 9,
+      "other_off_route": 29,
+      "adjacent_off_route": 62,
+      "reverse_direction": 12
+    },
+    "00000007": {
+      "correct": 1334,
+      "adjacent_off_route": 8,
+      "reverse_direction": 12
+    },
+    "00000009": {
+      "adjacent_off_route": 38,
+      "correct": 920,
+      "other_route_arc": 18,
+      "reverse_direction": 29,
+      "other_off_route": 44
+    },
+    "00000040": {
+      "correct": 2800,
+      "reverse_direction": 115,
+      "adjacent_off_route": 49,
+      "other_route_arc": 31
+    },
+    "00000052": {
+      "correct": 261,
+      "other_route_arc": 1
+    },
+    "00000056": {
+      "correct": 3665,
+      "other_off_route": 83,
+      "other_route_arc": 86,
+      "adjacent_off_route": 69,
+      "reverse_direction": 55
+    },
+    "00000065": {
+      "correct": 650,
+      "other_route_arc": 14,
+      "reverse_direction": 49,
+      "adjacent_off_route": 42,
+      "other_off_route": 13
+    },
+    "00000076": {
+      "adjacent_off_route": 71,
+      "correct": 1327,
+      "other_route_arc": 18,
+      "other_off_route": 57,
+      "reverse_direction": 13
+    },
+    "00000077": {
+      "correct": 2900,
+      "reverse_direction": 771,
+      "other_route_arc": 51,
+      "adjacent_off_route": 161,
+      "other_off_route": 28
+    },
+    "00000091": {
+      "correct": 760,
+      "reverse_direction": 18,
+      "other_route_arc": 32,
+      "other_off_route": 21,
+      "adjacent_off_route": 43
+    }
+  }
+}
