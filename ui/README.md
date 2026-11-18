@@ -37,4 +37,5 @@ Connect. The address is remembered, and can also be given as `?api=http://host:p
 
 ## Test without the real API
 
-`python ui/mock_api.py` serves synthetic geometry and placeholder zeros. It is for checking the UI only.
+`python ui/mock_api.py` serves synthetic geometry and placeholder zeros on 127.0.0.1:8000, allowing CORS only
+from `http://localhost:8080` (change with `--origin`, `--host`). It is for checking the UI only.

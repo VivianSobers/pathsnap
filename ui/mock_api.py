@@ -11,6 +11,7 @@ import json
 import math
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
+ALLOWED_ORIGIN = "http://localhost:8080"
 TRIPS = [f"mock_trip_{i}" for i in range(1, 11)]
 
 
@@ -24,10 +25,11 @@ def geometry(i: int):
 class H(BaseHTTPRequestHandler):
     def _send(self, code, body=None):
         self.send_response(code)
-        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Origin", ALLOWED_ORIGIN)
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "*")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.send_header("Content-Type", "application/json")
+        self.send_header("X-Content-Type-Options", "nosniff")
         self.end_headers()
         if body is not None:
             self.wfile.write(json.dumps(body).encode())
@@ -53,4 +55,8 @@ class H(BaseHTTPRequestHandler):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", type=int, default=8000)
-    HTTPServer(("0.0.0.0", ap.parse_args().port), H).serve_forever()
+    ap.add_argument("--host", default="127.0.0.1", help="bind address; loopback by default")
+    ap.add_argument("--origin", default="http://localhost:8080", help="UI origin allowed by CORS")
+    args = ap.parse_args()
+    ALLOWED_ORIGIN = args.origin
+    HTTPServer((args.host, args.port), H).serve_forever()
