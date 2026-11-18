@@ -44,25 +44,29 @@ def _geom(path):
 
 
 def _decode(args):
-    tid, g, cand, beta, w, split_s = args
+    tid, g, cand, beta, w, split_s, uturn = args
     return tid, decode_trip(cand["obs"], cand["arc"], cand["t_along"], cand["prob"], g["px"], g["py"],
-                            g["t"], g["nx"], g["ny"], g["arcs"], beta=beta, w=w, split_s=split_s)
+                            g["t"], g["nx"], g["ny"], g["arcs"], beta=beta, w=w, split_s=split_s,
+                            uturn_penalty=uturn)
 
 
 def score(preds: dict, ref: dict, geoms: dict) -> dict:
     """preds[trip] = {obs: arc}. Top-1 over all observations; continuity; route arc-set P/R/F1."""
-    tot = cor = 0; cont = []; P = []; R = []
+    tot = cor = cor_u = 0; cont = []; P = []; R = []
     for tid, r in ref.items():
         r = np.asarray(r); p = preds.get(tid, {})
         o = np.array(sorted(p), dtype=int); a = np.array([p[i] for i in o], dtype=int)
         tot += len(r); cor += int((a == r[o]).sum()) if len(o) else 0
+        if len(o):  # direction-agnostic: the same road segment in either direction counts as correct
+            arcs = geoms[tid]["arcs"]
+            cor_u += int((np.sort(arcs[a], 1) == np.sort(arcs[r[o]], 1)).all(1).sum())
         if len(a) > 1:
             cont.append(route_continuity(a, geoms[tid]["arcs"]))
         ps, rs = set(a.tolist()), set(geoms[tid]["route"].tolist())
         P.append(len(ps & rs) / max(len(ps), 1)); R.append(len(ps & rs) / max(len(rs), 1))
     P, R = np.array(P), np.array(R)
     f1 = np.where(P + R > 0, 2 * P * R / np.maximum(P + R, 1e-12), 0)
-    return {"top1_accuracy": cor / tot, "route_continuity": float(np.nanmean(cont)),
+    return {"top1_accuracy": cor / tot, "top1_undirected": cor_u / tot, "route_continuity": float(np.nanmean(cont)),
             "route_arc_precision": float(P.mean()), "route_arc_recall": float(R.mean()),
             "route_arc_f1": float(f1.mean())}
 
@@ -72,13 +76,13 @@ def classifier_only(pairs, prob):
     return {t: dict(zip(g["obs"].tolist(), g["pred_arc"].tolist())) for t, g in top.groupby("trip")}
 
 
-def hmm_preds(pairs, prob, geoms, beta, w, split_s, workers):
+def hmm_preds(pairs, prob, geoms, beta, w, split_s, workers, uturn=0.0):
     df = pairs[["trip", "obs", "arc", "t_along"]].copy(); df["prob"] = prob
     jobs = []
     for tid, g in df.groupby("trip", sort=False):
         g = g.sort_values("obs", kind="stable")
         cand = {c: g[c].to_numpy() for c in ["obs", "arc", "t_along", "prob"]}
-        jobs.append((tid, geoms[tid], cand, beta, w, split_s))
+        jobs.append((tid, geoms[tid], cand, beta, w, split_s, uturn))
     with ProcessPoolExecutor(workers) as ex:
         return dict(ex.map(_decode, jobs))
 
@@ -89,6 +93,9 @@ def main():
     ap.add_argument("--betas", type=float, nargs="+", default=[2.0, 5.0, 10.0, 20.0, 50.0])
     ap.add_argument("--ws", type=float, nargs="+", default=[0.5, 1.0, 2.0])
     ap.add_argument("--tag", default="")
+    ap.add_argument("--uturns", type=float, nargs="+", default=[0.0])
+    ap.add_argument("--exclude-train-trips", nargs="*", default=[],
+                    help="training trips left out of model fitting (they are still scored)")
     a = ap.parse_args()
     cfg = load_config(); seed = cfg["seed"]; split_s = cfg["gaps"]["split_s"]
     out = cfg["paths"]["results"] / "hmm"; out.mkdir(parents=True, exist_ok=True)
@@ -96,32 +103,37 @@ def main():
     tpairs, tX, ty, tref = load_partition(cfg, "student_test")
     geoms = dict(map(_geom, list_trips(cfg["paths"]["train"]) + list_trips(cfg["paths"]["student_test"])))
 
-    cache = cfg["paths"]["interim"] / "lightgbm_untuned_probs.npz"
+    from pathsnap.features import FEATURES
+    excl = sorted(a.exclude_train_trips)
+    cache = cfg["paths"]["interim"] / f"lightgbm_untuned_probs_f{len(FEATURES)}{'_excl_' + '_'.join(excl) if excl else ''}.npz"
     if cache.exists():
         z = np.load(cache); oof, tprob = z["oof"], z["test"]
     else:
         model = _tm.models(seed, a.workers)["lightgbm"][0]()
         oof = np.zeros(len(X))
+        keep = ~pairs["trip"].isin(excl).to_numpy()
         for tr, va in GroupKFold(cfg["cv"]["n_splits"]).split(X, y, pairs["trip"]):
+            tr = tr[keep[tr]]
             m = clone(model).fit(X[tr], y[tr]); oof[va] = m.predict_proba(X[va])[:, 1]
-        final = clone(model).fit(X, y); tprob = final.predict_proba(tX)[:, 1]
+        final = clone(model).fit(X[keep], y[keep]); tprob = final.predict_proba(tX)[:, 1]
         np.savez(cache, oof=oof, test=tprob)
 
     grid = []
-    for beta, w in itertools.product(a.betas, a.ws):
+    for beta, w, u in itertools.product(a.betas, a.ws, a.uturns):
         t0 = time.time()
-        s = score(hmm_preds(pairs, oof, geoms, beta, w, split_s, a.workers), ref, geoms)
-        grid.append({"beta": beta, "w": w, **s, "seconds": time.time() - t0}); print(grid[-1], flush=True)
+        s = score(hmm_preds(pairs, oof, geoms, beta, w, split_s, a.workers, u), ref, geoms)
+        grid.append({"beta": beta, "w": w, "uturn": u, **s, "seconds": time.time() - t0}); print(grid[-1], flush=True)
     best = max(grid, key=lambda r: r["top1_accuracy"])
 
-    t0 = time.time(); test_hmm = hmm_preds(tpairs, tprob, geoms, best["beta"], best["w"], split_s, a.workers)
+    t0 = time.time(); test_hmm = hmm_preds(tpairs, tprob, geoms, best["beta"], best["w"], split_s, a.workers, best["uturn"])
     hmm_s = time.time() - t0
     result = {
         "model": "lightgbm (untuned, same params as results/models/lightgbm.json)", "seed": seed,
         "split_s": split_s, "selection": "best top1 on training out-of-fold predictions",
-        "best": {"beta": best["beta"], "w": best["w"]}, "grid_train_oof": grid,
+        "features": FEATURES, "excluded_train_trips": excl,
+        "best": {"beta": best["beta"], "w": best["w"], "uturn": best["uturn"]}, "grid_train_oof": grid,
         "train_oof": {"classifier_only": score(classifier_only(pairs, oof), ref, geoms),
-                      "hmm": {k: v for k, v in best.items() if k not in ("beta", "w", "seconds")}},
+                      "hmm": {k: v for k, v in best.items() if k not in ("beta", "w", "uturn", "seconds")}},
         "student_test": {"classifier_only": score(classifier_only(tpairs, tprob), tref, geoms),
                          "hmm": score(test_hmm, tref, geoms), "hmm_decode_seconds": hmm_s},
     }

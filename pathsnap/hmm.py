@@ -85,10 +85,21 @@ def viterbi_segments(steps, emis, trans_fn):
     return choice
 
 
+def reverse_arcs(arcs):
+    """For each arc, the id of the arc with the same two nodes in the opposite direction, or -1."""
+    key = {(int(a), int(b)): i for i, (a, b) in enumerate(arcs)}
+    return np.array([key.get((int(b), int(a)), -1) for a, b in arcs], dtype=np.int64)
+
+
 def decode_trip(obs, arc, t_along, prob, px, py, t, nx, ny, arcs, beta=10.0, w=1.0,
-                split_s=60.0, limit_m=3000.0):
-    """Decode one trip. obs/arc/t_along/prob: candidate rows sorted by obs. Returns {obs: arc}."""
+                split_s=60.0, limit_m=3000.0, uturn_penalty=0.0):
+    """Decode one trip. obs/arc/t_along/prob: candidate rows sorted by obs. Returns {obs: arc}.
+
+    uturn_penalty is subtracted from the log-transition score when consecutive states switch from an
+    arc to its own reverse (a U-turn on the same road segment).
+    """
     g, alen = road_graph(nx, ny, arcs)
+    rev = reverse_arcs(arcs) if uturn_penalty else None
     starts = np.r_[0, np.flatnonzero(np.diff(obs)) + 1]
     ends = np.r_[starts[1:], len(obs)]
     steps = obs[starts]
@@ -114,6 +125,8 @@ def decode_trip(obs, arc, t_along, prob, px, py, t, nx, ny, arcs, beta=10.0, w=1
         net = np.where(same, np.abs(t_along[B] - t_along[A]) * alen[ra], net)
         gc = np.hypot(px[i1] - px[i0], py[i1] - py[i0])
         lt = np.where(np.isfinite(net), -np.abs(net - gc) / beta, NEG)
+        if rev is not None:
+            lt = lt - uturn_penalty * (rev[ra] == rb)
         return lt.reshape(ends[k] - starts[k], ends[k + 1] - starts[k + 1])
 
     ch = viterbi_segments(steps, emis, trans)
