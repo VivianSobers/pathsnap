@@ -45,12 +45,13 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True)
     ap.add_argument("--jobs", type=int, default=4)
+    ap.add_argument("--name", default=None, help="results file name (defaults to the model key)")
     a = ap.parse_args()
     cfg = load_config()
     model, sub = models(cfg["seed"], a.jobs)[a.model]
     if not hasattr(model, "fit"):  # lazily built (LightGBM)
         model = model()
-    run(a.model, model, cfg, cfg["paths"]["results"] / "models", fit_subsample=sub)
+    run(a.name or a.model, model, cfg, cfg["paths"]["results"] / "models", fit_subsample=sub)
 
 
 if __name__ == "__main__":
