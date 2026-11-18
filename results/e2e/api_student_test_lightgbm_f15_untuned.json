@@ -1,0 +1,98 @@
+{
+  "artifact": "artifacts/lightgbm_f15_untuned.joblib",
+  "partition": "student_test",
+  "trips": [
+    {
+      "trip": "00000000",
+      "status": 200,
+      "n_points": 2503,
+      "top1_accuracy": 0.9564522572912505,
+      "route_continuity": 0.8986784140969163,
+      "runtime_s": 1.8780236339998737,
+      "route_segments": 2503
+    },
+    {
+      "trip": "00000007",
+      "status": 200,
+      "n_points": 1354,
+      "top1_accuracy": 0.98301329394387,
+      "route_continuity": 0.9850746268656716,
+      "runtime_s": 0.9510980259997268,
+      "route_segments": 1354
+    },
+    {
+      "trip": "00000009",
+      "status": 200,
+      "n_points": 1049,
+      "top1_accuracy": 0.8817921830314586,
+      "route_continuity": 0.8232445520581114,
+      "runtime_s": 1.0775854989997242,
+      "route_segments": 1049
+    },
+    {
+      "trip": "00000040",
+      "status": 200,
+      "n_points": 2995,
+      "top1_accuracy": 0.9328881469115192,
+      "route_continuity": 0.9106753812636166,
+      "runtime_s": 2.4592611080001916,
+      "route_segments": 2995
+    },
+    {
+      "trip": "00000052",
+      "status": 200,
+      "n_points": 262,
+      "top1_accuracy": 0.9923664122137404,
+      "route_continuity": 0.9036144578313253,
+      "runtime_s": 0.23912584800018521,
+      "route_segments": 262
+    },
+    {
+      "trip": "00000056",
+      "status": 200,
+      "n_points": 3958,
+      "top1_accuracy": 0.9224355735219808,
+      "route_continuity": 0.8648854961832061,
+      "runtime_s": 2.1543568020001658,
+      "route_segments": 3958
+    },
+    {
+      "trip": "00000065",
+      "status": 200,
+      "n_points": 768,
+      "top1_accuracy": 0.84765625,
+      "route_continuity": 0.8486486486486486,
+      "runtime_s": 0.4456302929997946,
+      "route_segments": 768
+    },
+    {
+      "trip": "00000076",
+      "status": 200,
+      "n_points": 1486,
+      "top1_accuracy": 0.8970390309555855,
+      "route_continuity": 0.7931034482758621,
+      "runtime_s": 1.0047653679998803,
+      "route_segments": 1486
+    },
+    {
+      "trip": "00000077",
+      "status": 200,
+      "n_points": 3911,
+      "top1_accuracy": 0.7386857581181283,
+      "route_continuity": 0.912478336221837,
+      "runtime_s": 1.0826129919996674,
+      "route_segments": 3911
+    },
+    {
+      "trip": "00000091",
+      "status": 200,
+      "n_points": 874,
+      "top1_accuracy": 0.8627002288329519,
+      "route_continuity": 0.7811320754716982,
+      "runtime_s": 0.30704906699975254,
+      "route_segments": 874
+    }
+  ],
+  "pooled_top1_accuracy": 0.8863256784968685,
+  "mean_route_continuity": 0.8721535436916893
+}
