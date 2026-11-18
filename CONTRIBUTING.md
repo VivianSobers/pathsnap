@@ -26,8 +26,8 @@ itself; a UI on laptop 2 lets the evaluator pick one of the ten reserved trips a
 | 7 | Folium maps and plots | Harsimran | 4 | 0 | ✅ |
 | 8 | API | Chirag, Vivian | 4 | 0 | ✅ |
 | 9 | UI | Chiranthan | 3 | 0 | ✅ |
-| 10 | Integration, README and report | Everyone | 2 | 4 | ❌ |
-| | **Total** | | **44** | **4** | |
+| 10 | Integration, README and report | Everyone | 4 | 2 | ❌ |
+| | **Total** | | **46** | **2** | |
 
 ## Share of work
 
@@ -164,8 +164,8 @@ prediction pipeline.
 | ❌ | Two-laptop rehearsal: API on laptop 1, UI on laptop 2, logs shown | Chiranthan, Chirag | |
 | ✅ | README: install, run, deploy on two laptops | Chiranthan | `README.md` |
 | ❌ | Screenshots of UI and API responses | Chiranthan | `report/figures/` |
-| ❌ | Report sections: EDA (Harsimran), models (Chirag), HPO and HMM (Vivian) | Everyone | `report/` |
-| ❌ | Final check that every number in the report matches a file in `results/` | Vivian | `report/` |
+| ✅ | Report sections: EDA (Harsimran), models (Chirag), HPO and HMM (Vivian); assembled by `report/build_report.py` | Everyone | `report/` |
+| ✅ | Final check that every number in the report matches a file in `results/` (all numbers generated from `results/`) | Vivian | `report/` |
 
 ## Data and leakage rules
 
