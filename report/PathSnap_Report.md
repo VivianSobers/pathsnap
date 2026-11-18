@@ -45,6 +45,18 @@ scored once with the committed model, pooled Top-1 is 0.9244 and mean route
 continuity 0.7680 (section 7.5). Bayesian optimisation and dropping the noisiest
 training trip gave no measurable gain.
 
+**Inference accuracy of the final system.** Measured through the API with the deployed model
+(`artifacts/lightgbm_f15_tuned_uturn10.joblib`), every trip scored server side
+(`results/e2e/api_student_test_lightgbm_f15_tuned_uturn10.json`,
+`results/e2e/api_evaluator_test_lightgbm_f15_tuned_uturn10.json`):
+
+| Final system, after implementation | Student-test trips (10) | Evaluator trips (10) |
+|---|---|---|
+| **Top-1 accuracy** (share of GPS points matched to the reference arc) | **0.9076** | **0.9244** |
+| Route continuity (mean over trips) | 0.8103 | 0.7680 |
+| GPS points scored | 19,160 | 19,674 |
+| Inference time per trip, mean (s) | 0.83 | 0.89 |
+
 Every number in this report is generated from a file in `results/` by `report/build_report.py`. Partitions
 used: **train** = 80 training trips (fitting and grouped cross-validation), **student test** = 10
 student-testing trips (development-stage comparison). The 10 evaluator trips were not used for training
@@ -554,8 +566,8 @@ investigate it, so that the evaluator trips stay out of development.
 ## 8. Conclusions and limitations
 
 - Final pipeline: 50 m / k = 8 candidates, 15 features, tuned LightGBM, HMM/Viterbi with β = 100 and a
-  U-turn penalty of 10. Top-1 through the API: 0.9076 on the student-test trips
-  and 0.9244 on the evaluator trips.
+  U-turn penalty of 10. **Inference Top-1 accuracy through the API: 0.9076 on the
+  student-test trips and 0.9244 on the evaluator trips.**
 - The HMM gives the largest gain over the classifier alone. Bayesian optimisation and dropping the noisiest
   training trip gave no measurable gain; we report both as negative results.
 - Part of the remaining error lies in the reference routes (arcs pointing against the vehicle's motion),
