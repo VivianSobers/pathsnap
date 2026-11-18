@@ -161,7 +161,7 @@ prediction pipeline.
 | Status | Task | Owner | Where |
 |---|---|---|---|
 | ✅ | End-to-end run on all ten trips from a clean checkout (student-test trips, pooled Top-1 matches `results/e2e/`) | Vivian | `scripts/` |
-| ❌ | Two-laptop rehearsal: API on laptop 1, UI on laptop 2, logs shown | Chiranthan, Chirag | |
+| ❌ | Two-laptop rehearsal: API on laptop 1, UI on laptop 2, logs shown | Vivian, Chirag | README "Run on two laptops" |
 | ✅ | README: install, run, deploy on two laptops | Chiranthan | `README.md` |
 | ❌ | Screenshots of UI and API responses | Chiranthan | `report/figures/` |
 | ✅ | Report sections: EDA (Harsimran), models (Chirag), HPO and HMM (Vivian); assembled by `report/build_report.py` | Everyone | `report/` |
