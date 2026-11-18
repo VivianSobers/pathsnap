@@ -1,0 +1,80 @@
+{
+  "artifact": "artifacts/lightgbm_f15_tuned_uturn10.joblib",
+  "partition": "evaluator_test",
+  "commit": "c96bedb",
+  "run_at_utc": "2026-11-18T10:42:46+00:00",
+  "trips": [
+    {
+      "trip": "00000015",
+      "n_points": 6854,
+      "top1_accuracy": 0.8672308141231397,
+      "route_continuity": 0.3688212927756654,
+      "runtime_s": 2.256992170000558
+    },
+    {
+      "trip": "00000017",
+      "n_points": 1346,
+      "top1_accuracy": 0.9264487369985142,
+      "route_continuity": 0.6882067851373183,
+      "runtime_s": 1.1640281059999324
+    },
+    {
+      "trip": "00000023",
+      "n_points": 458,
+      "top1_accuracy": 0.9454148471615721,
+      "route_continuity": 0.75,
+      "runtime_s": 0.2201753319995987
+    },
+    {
+      "trip": "00000030",
+      "n_points": 654,
+      "top1_accuracy": 0.8516819571865444,
+      "route_continuity": 0.6964285714285714,
+      "runtime_s": 0.4384413779998795
+    },
+    {
+      "trip": "00000049",
+      "n_points": 2642,
+      "top1_accuracy": 0.9935654806964421,
+      "route_continuity": 0.945,
+      "runtime_s": 0.9747836989999996
+    },
+    {
+      "trip": "00000059",
+      "n_points": 1031,
+      "top1_accuracy": 0.9641125121241513,
+      "route_continuity": 0.7734806629834254,
+      "runtime_s": 0.6571554149995791
+    },
+    {
+      "trip": "00000067",
+      "n_points": 916,
+      "top1_accuracy": 0.9563318777292577,
+      "route_continuity": 0.8481012658227848,
+      "runtime_s": 0.3487305340004241
+    },
+    {
+      "trip": "00000073",
+      "n_points": 1144,
+      "top1_accuracy": 0.9781468531468531,
+      "route_continuity": 0.9098360655737705,
+      "runtime_s": 0.537073018999763
+    },
+    {
+      "trip": "00000087",
+      "n_points": 1399,
+      "top1_accuracy": 0.9907076483202287,
+      "route_continuity": 0.9613636363636363,
+      "runtime_s": 1.011984658000074
+    },
+    {
+      "trip": "00000094",
+      "n_points": 3230,
+      "top1_accuracy": 0.9306501547987616,
+      "route_continuity": 0.7387005649717514,
+      "runtime_s": 1.2463780939997378
+    }
+  ],
+  "pooled_top1_accuracy": 0.9244180136220392,
+  "mean_route_continuity": 0.7679938845056923
+}
