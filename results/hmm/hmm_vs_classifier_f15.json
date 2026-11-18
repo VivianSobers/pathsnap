@@ -1,0 +1,212 @@
+{
+  "model": "lightgbm (untuned, same params as results/models/lightgbm.json)",
+  "seed": 42,
+  "split_s": 60,
+  "selection": "best top1 on training out-of-fold predictions",
+  "features": [
+    "dist",
+    "rank",
+    "dist_minus_min",
+    "n_cand",
+    "t_along",
+    "arc_len",
+    "cos_heading",
+    "abs_cos_heading",
+    "speed",
+    "dt_prev",
+    "dist_prev_pt",
+    "dist_next_pt",
+    "turn_rate_rad_s",
+    "previous_candidate_m",
+    "next_candidate_m"
+  ],
+  "excluded_train_trips": [],
+  "best": {
+    "beta": 100.0,
+    "w": 1.0,
+    "uturn": 10.0
+  },
+  "grid_train_oof": [
+    {
+      "beta": 50.0,
+      "w": 1.0,
+      "uturn": 0.0,
+      "top1_accuracy": 0.765638119731116,
+      "top1_undirected": 0.8180426740620966,
+      "route_continuity": 0.8687173478201625,
+      "route_arc_precision": 0.8691661432034866,
+      "route_arc_recall": 0.8954509512495946,
+      "route_arc_f1": 0.8754389785243362,
+      "seconds": 4.683351516723633
+    },
+    {
+      "beta": 50.0,
+      "w": 1.0,
+      "uturn": 2.0,
+      "top1_accuracy": 0.7801858773516556,
+      "top1_undirected": 0.8172126074168614,
+      "route_continuity": 0.8175808659356983,
+      "route_arc_precision": 0.8989883588497051,
+      "route_arc_recall": 0.8954072101676707,
+      "route_arc_f1": 0.8928534878012669,
+      "seconds": 7.906932353973389
+    },
+    {
+      "beta": 50.0,
+      "w": 1.0,
+      "uturn": 5.0,
+      "top1_accuracy": 0.7831606826698398,
+      "top1_undirected": 0.8169199249581368,
+      "route_continuity": 0.8030824154501719,
+      "route_arc_precision": 0.9023225259425661,
+      "route_arc_recall": 0.8954205197724725,
+      "route_arc_f1": 0.8947748720091887,
+      "seconds": 8.940131664276123
+    },
+    {
+      "beta": 50.0,
+      "w": 1.0,
+      "uturn": 10.0,
+      "top1_accuracy": 0.7841634799464535,
+      "top1_undirected": 0.8167328001074768,
+      "route_continuity": 0.799103216121089,
+      "route_arc_precision": 0.9025739265455506,
+      "route_arc_recall": 0.8953814572724725,
+      "route_arc_f1": 0.8948766812297315,
+      "seconds": 9.149962186813354
+    },
+    {
+      "beta": 100.0,
+      "w": 1.0,
+      "uturn": 0.0,
+      "top1_accuracy": 0.766943195612642,
+      "top1_undirected": 0.8191318366543996,
+      "route_continuity": 0.853015625956472,
+      "route_arc_precision": 0.8647208672148009,
+      "route_arc_recall": 0.8941643968793989,
+      "route_arc_f1": 0.8723564532229375,
+      "seconds": 5.3685362339019775
+    },
+    {
+      "beta": 100.0,
+      "w": 1.0,
+      "uturn": 2.0,
+      "top1_accuracy": 0.780886396023357,
+      "top1_undirected": 0.8182873757898828,
+      "route_continuity": 0.7966026228182886,
+      "route_arc_precision": 0.8925465523075623,
+      "route_arc_recall": 0.8940948646307983,
+      "route_arc_f1": 0.8887860947418244,
+      "seconds": 5.770012855529785
+    },
+    {
+      "beta": 100.0,
+      "w": 1.0,
+      "uturn": 5.0,
+      "top1_accuracy": 0.783899585926292,
+      "top1_undirected": 0.8178651453576243,
+      "route_continuity": 0.782483811667519,
+      "route_arc_precision": 0.8949388909855991,
+      "route_arc_recall": 0.8940846963005258,
+      "route_arc_f1": 0.890185530062712,
+      "seconds": 6.198035717010498
+    },
+    {
+      "beta": 100.0,
+      "w": 1.0,
+      "uturn": 10.0,
+      "top1_accuracy": 0.7854685558279795,
+      "top1_undirected": 0.8177260012379028,
+      "route_continuity": 0.7802558516654837,
+      "route_arc_precision": 0.89488113002086,
+      "route_arc_recall": 0.8939729593819212,
+      "route_arc_f1": 0.8900952234701205,
+      "seconds": 7.1408326625823975
+    },
+    {
+      "beta": 200.0,
+      "w": 1.0,
+      "uturn": 0.0,
+      "top1_accuracy": 0.765575744780896,
+      "top1_undirected": 0.8190022886808658,
+      "route_continuity": 0.8427994511390523,
+      "route_arc_precision": 0.8587891321280198,
+      "route_arc_recall": 0.8930506887420455,
+      "route_arc_f1": 0.8684459843107408,
+      "seconds": 5.657400131225586
+    },
+    {
+      "beta": 200.0,
+      "w": 1.0,
+      "uturn": 2.0,
+      "top1_accuracy": 0.7814285782829615,
+      "top1_undirected": 0.8182585873513197,
+      "route_continuity": 0.7779477035687348,
+      "route_arc_precision": 0.8841668783029171,
+      "route_arc_recall": 0.8927880171198155,
+      "route_arc_f1": 0.8834618568879773,
+      "seconds": 8.080675601959229
+    },
+    {
+      "beta": 200.0,
+      "w": 1.0,
+      "uturn": 5.0,
+      "top1_accuracy": 0.7828008271878014,
+      "top1_undirected": 0.8178843376499998,
+      "route_continuity": 0.7661269704540803,
+      "route_arc_precision": 0.8857755122666482,
+      "route_arc_recall": 0.8927864962132069,
+      "route_arc_f1": 0.8844333428868939,
+      "seconds": 7.485276460647583
+    },
+    {
+      "beta": 200.0,
+      "w": 1.0,
+      "uturn": 10.0,
+      "top1_accuracy": 0.7848783928374364,
+      "top1_undirected": 0.817754789676466,
+      "route_continuity": 0.7640675269042516,
+      "route_arc_precision": 0.8857533843526489,
+      "route_arc_recall": 0.892806496213207,
+      "route_arc_f1": 0.8844187773879305,
+      "seconds": 7.375756025314331
+    }
+  ],
+  "train_oof": {
+    "classifier_only": {
+      "top1_accuracy": 0.7533598506839653,
+      "top1_undirected": 0.8196068458906903,
+      "route_continuity": 0.7589420887594398,
+      "route_arc_precision": 0.8130452188062245,
+      "route_arc_recall": 0.8845398526688706,
+      "route_arc_f1": 0.8390222954261208
+    },
+    "hmm": {
+      "top1_accuracy": 0.7854685558279795,
+      "top1_undirected": 0.8177260012379028,
+      "route_continuity": 0.7802558516654837,
+      "route_arc_precision": 0.89488113002086,
+      "route_arc_recall": 0.8939729593819212,
+      "route_arc_f1": 0.8900952234701205
+    }
+  },
+  "student_test": {
+    "classifier_only": {
+      "top1_accuracy": 0.8667014613778705,
+      "top1_undirected": 0.9265657620041754,
+      "route_continuity": 0.7788295485014735,
+      "route_arc_precision": 0.8366581035380692,
+      "route_arc_recall": 0.8871780051726379,
+      "route_arc_f1": 0.8580631830275367
+    },
+    "hmm": {
+      "top1_accuracy": 0.9059498956158664,
+      "top1_undirected": 0.9420668058455115,
+      "route_continuity": 0.8095879805582026,
+      "route_arc_precision": 0.9101989566436064,
+      "route_arc_recall": 0.8973072286709352,
+      "route_arc_f1": 0.9018940805641732
+    },
+    "hmm_decode_seconds": 1.1027436256408691
+  }
+}
