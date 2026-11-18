@@ -1,0 +1,26 @@
+# Shared settings for every script. Paths are relative to the repository root.
+seed: 42
+
+paths:
+  raw: data/raw/Student folder
+  train: data/raw/Student folder/train
+  student_test: data/raw/Student folder/student_test
+  interim: data/interim
+  results: results
+  artifacts: artifacts
+
+geo:
+  # The trips lie around 8.6 E, 49.8 N, inside UTM zone 32N.
+  input_crs: EPSG:4326
+  metric_crs: EPSG:32632
+
+candidates:
+  radius_m: 50.0
+  max_k: 8
+
+gaps:
+  # A gap longer than this splits a trip into separately decoded segments.
+  split_s: 60
+
+cv:
+  n_splits: 5
