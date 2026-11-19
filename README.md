@@ -7,12 +7,12 @@
 Distributed map-matching and route reconstruction: a LightGBM candidate classifier,<br>
 HMM/Viterbi decoding, a FastAPI server on one laptop and an evaluator UI on another.
 
-[![Evaluator Top-1](https://img.shields.io/badge/Evaluator%20Top--1-92.44%25-1B5E20?style=for-the-badge&labelColor=43A047)](#final-system)
-[![Student-test Top-1](https://img.shields.io/badge/Student--Test%20Top--1-90.76%25-2E7D32?style=for-the-badge&labelColor=66BB6A)](#final-system)
-[![HMM](https://img.shields.io/badge/HMM%20Gain-Top--1%200.8667%20%E2%86%92%200.9059-B71C1C?style=for-the-badge&labelColor=EF5350)](#what-the-hmm-adds)
+[![Evaluator Top-1](https://img.shields.io/badge/Evaluator%20Top--1-94.93%25-1B5E20?style=for-the-badge&labelColor=43A047)](#final-system)
+[![Student-test Top-1](https://img.shields.io/badge/Student--Test%20Top--1-94.28%25-2E7D32?style=for-the-badge&labelColor=66BB6A)](#final-system)
+[![HMM](https://img.shields.io/badge/HMM%20Gain-Top--1%200.8667%20%E2%86%92%200.9407-B71C1C?style=for-the-badge&labelColor=EF5350)](#what-the-hmm-adds)
 [![Models](https://img.shields.io/badge/Models-6%20Families%20%C2%B7%20LightGBM%20Chosen-E65100?style=for-the-badge&labelColor=FF9800)](#model-comparison)
 [![Tuning](https://img.shields.io/badge/Tuning-Optuna%20TPE%20%C2%B7%2032%20Trials-6A1B9A?style=for-the-badge&labelColor=AB47BC)](#bayesian-optimisation)
-[![Tests](https://img.shields.io/badge/Tests-24%20Passing-1B5E20?style=for-the-badge&labelColor=43A047&logo=pytest&logoColor=FFFFFF)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-26%20Passing-1B5E20?style=for-the-badge&labelColor=43A047&logo=pytest&logoColor=FFFFFF)](tests/)
 [![Serving](https://img.shields.io/badge/Serving-FastAPI%20%C2%B7%20Two%20Laptops-00897B?style=for-the-badge&labelColor=26A69A&logo=fastapi&logoColor=FFFFFF)](#two-laptop-deployment)
 [![Language](https://img.shields.io/badge/Language-Python%203.13-1C1C1C?style=for-the-badge&labelColor=424242&logo=python&logoColor=FFD700)](requirements.txt)
 [![Course](https://img.shields.io/badge/Course-UE24CS352A%20Machine%20Learning-512DA8?style=for-the-badge&labelColor=9575CD)](report/PathSnap_Report.md)
@@ -20,9 +20,9 @@ HMM/Viterbi decoding, a FastAPI server on one laptop and an evaluator UI on anot
 
 <img src="report/figures/ui_route_and_scores.png" alt="PathSnap evaluator UI showing the predicted route and scores for evaluator trip 00000023" width="820">
 
-<sub>The evaluator UI on laptop 2 showing evaluator trip 00000023, predicted and scored by the API on laptop 1.</sub>
+<sub>The evaluator UI on laptop 2 showing evaluator trip 00000023, predicted and scored by the API on laptop 1 (submitted version).</sub>
 
-[Results](#results) · [How it works](#how-it-works) · [Deployment](#two-laptop-deployment) · [Reproduce](#reproduce-the-results) · [Layout](#repository-layout) · [Report](report/PathSnap_Report.md) · [Team](#team)
+[Results](#results) · [Decoder fix](#after-submission-decoder-fix) · [How it works](#how-it-works) · [Deployment](#two-laptop-deployment) · [Reproduce](#reproduce-the-results) · [Layout](#repository-layout) · [Report](report/PathSnap_Report.md) · [Team](#team)
 
 </div>
 
@@ -43,31 +43,48 @@ All numbers below are read from files in `results/`, which the scripts in this r
 
 ### Final system
 
-The deployed model (`artifacts/lightgbm_f15_tuned_uturn10.joblib`) run end to end through the API, with
-every trip scored on the server:
+The current model (`artifacts/lightgbm_f15_tuned_backtol15.joblib`) run end to end through the API, with
+every trip scored on the server. The submitted version is shown alongside it; the only difference between
+the two is one decoder rule, described under [After submission](#after-submission-decoder-fix).
 
-| | Student-test trips | Evaluator trips |
-|---|---|---|
-| **Top-1 accuracy** (share of GPS points on the right arc) | **0.9076** | **0.9244** |
-| Route continuity (mean over trips) | 0.8103 | 0.7680 |
-| GPS points scored | 19,160 | 19,674 |
-| Mean inference time per trip | 0.83 s | 0.89 s |
+| | Student test, current | Evaluator, current | Student test, submitted | Evaluator, submitted |
+|---|---|---|---|---|
+| **Top-1 accuracy** (share of GPS points on the right arc) | **0.9428** | **0.9493** | 0.9076 | 0.9244 |
+| Route continuity (mean over trips) | 0.8911 | 0.8453 | 0.8103 | 0.7680 |
+| GPS points scored | 19,160 | 19,674 | 19,160 | 19,674 |
+| Mean inference time per trip | 0.92 s | 0.93 s | 0.83 s | 0.89 s |
 
-Sources: `results/e2e/api_student_test_lightgbm_f15_tuned_uturn10.json` and
-`results/e2e/api_evaluator_test_lightgbm_f15_tuned_uturn10.json`. The evaluator trips arrived after the model
-was committed and were never used for training or for any choice. Mean continuity on the evaluator trips is
-lower mainly because of one long trip (00000015, continuity 0.3688).
+Sources: `results/e2e/api_<partition>_lightgbm_f15_tuned_backtol15.json` (commit `fad7d45`) and
+`results/e2e/api_<partition>_lightgbm_f15_tuned_uturn10.json` (commit `c96bedb`). The evaluator trips were never
+used for training or for any choice; each version was run on them once, after its settings were fixed.
+
+### After submission: decoder fix
+
+The submitted decoder treated a GPS point that appears to move backwards along the same arc as a real
+backward move unless the step was under 5% of the arc's length. On a 40 m arc that is 2 m, less than normal
+GPS jitter, so the decoder charged it as a drive to the end of the arc and back. Small β values then punished the
+right arc, the β search drifted up to 100, and the distance check stopped doing much. The fix allows up to
+15 m of apparent backward movement on the same arc, whatever its length (`back_tol_m` in `pathsnap/hmm.py`).
+
+The new setting was chosen the same way as the old one: a grid over β {2, 5, 10, 20, 50, 100}, emission
+weight {0.5, 1}, U-turn penalty {0, 10} and the old rule against the new one, scored on the training trips'
+out-of-fold predictions only (`results/hmm/hmm_vs_classifier_f15_backtol.json`, commit `3e34048`). The 15 m
+rule beat the 5% rule in all 24 matched settings. Best out-of-fold Top-1 went from 0.7855 (5% rule, β = 100,
+w = 1, U-turn 10) to 0.8257 (15 m rule, β = 5, w = 1, U-turn 10). The classifier is unchanged. The technical
+report in `report/` describes the submitted version.
 
 ### What the HMM adds
 
 Same 15-feature LightGBM, scored per GPS point on the student-test trips
-(`results/hmm/hmm_vs_classifier_f15.json`):
+(`results/hmm/hmm_vs_classifier_f15_backtol.json`, current decoder):
 
 | | Classifier only | Classifier + HMM/Viterbi |
 |---|---|---|
-| Top-1 accuracy | 0.8667 | **0.9059** |
-| Route continuity | 0.7788 | **0.8096** |
-| Route arc F1 | 0.8581 | **0.9019** |
+| Top-1 accuracy | 0.8667 | **0.9407** |
+| Route continuity | 0.7788 | **0.8899** |
+| Route arc F1 | 0.8581 | **0.9327** |
+
+With the submitted decoder the same comparison gave 0.9059 Top-1 (`results/hmm/hmm_vs_classifier_f15.json`).
 
 ### Model comparison
 
@@ -128,7 +145,8 @@ flowchart LR
 5. **Classifier.** LightGBM gives the probability that each candidate is the right arc.
 6. **HMM and Viterbi.** Hidden states are the candidates. Emissions come from the classifier; transitions
    penalise the gap between road-network distance and straight-line distance, plus a U-turn penalty.
-   Decoding restarts after gaps over 60 s. Decoder settings were chosen on training trips only.
+   Up to 15 m of apparent backward movement on the same arc counts as GPS jitter. Decoding restarts after
+   gaps over 60 s. Decoder settings were chosen on training trips only.
 
 ![Folium map of a student-test trip: GPS points, road network, reference and predicted route](report/figures/folium_student_test_00000077.png)
 
@@ -161,7 +179,7 @@ inside (git ignores `data/`).
 python -m venv .venv
 .venv\Scripts\activate          # Windows;  source .venv/bin/activate on Linux or macOS
 pip install -r requirements.txt
-python -m pytest                 # 24 tests
+python -m pytest                 # 26 tests
 ```
 
 ### Laptop 1: API
@@ -171,7 +189,7 @@ Point the API to the model artifact, the evaluator's trip folder and the address
 Windows (PowerShell):
 
 ```powershell
-$env:PATHSNAP_MODEL_ARTIFACT = (Resolve-Path artifacts/lightgbm_f15_tuned_uturn10.joblib).Path
+$env:PATHSNAP_MODEL_ARTIFACT = (Resolve-Path artifacts/lightgbm_f15_tuned_backtol15.joblib).Path
 $env:PATHSNAP_EVALUATION_DIR = 'C:\path\to\reserved-trips'
 $env:PATHSNAP_UI_ORIGIN = 'http://<laptop-2-ip>:8080'
 python -m uvicorn api.main:app --host 0.0.0.0 --port 8000
@@ -180,7 +198,7 @@ python -m uvicorn api.main:app --host 0.0.0.0 --port 8000
 Linux or macOS:
 
 ```bash
-export PATHSNAP_MODEL_ARTIFACT="$PWD/artifacts/lightgbm_f15_tuned_uturn10.joblib"
+export PATHSNAP_MODEL_ARTIFACT="$PWD/artifacts/lightgbm_f15_tuned_backtol15.joblib"
 export PATHSNAP_EVALUATION_DIR=/path/to/reserved-trips
 export PATHSNAP_UI_ORIGIN=http://<laptop-2-ip>:8080
 python -m uvicorn api.main:app --host 0.0.0.0 --port 8000
@@ -223,10 +241,12 @@ was produced at commit `78f6c4e`.
 | 4.2 Untuned LightGBM, 15 features | `python -m scripts.train_models --model lightgbm --name lightgbm_15feat` | `results/models/lightgbm_15feat.json` |
 | 4. Bayesian optimisation | `python scripts/tune.py search --study lightgbm_f15 --worker <i>` (one or more workers), then `python scripts/tune.py finalize --study lightgbm_f15 --name lightgbm_f15_tuned` | `results/hpo/`, `results/models/lightgbm_f15_tuned.json` |
 | 5. HMM | `python -m scripts.hmm_eval --betas 50 100 200 --ws 1 --uturns 0 2 5 10 --tag _f15` (add `--exclude-train-trips 00000054 --tag _f15_excl54` for the trip-54 check) | `results/hmm/` |
+| Decoder fix (after submission) | `python -m scripts.hmm_eval --betas 2 5 10 20 50 100 --ws 0.5 1 --uturns 0 10 --back-tols rel 15 --tag _f15_backtol` | `results/hmm/hmm_vs_classifier_f15_backtol.json` |
 | 5. Error analysis | `python scripts/error_analysis.py results/hmm/student_test_predictions_f15.json` | `results/hmm/error_analysis_f15.json` |
 | 6. Folium maps | `python scripts/make_prediction_maps.py artifacts/lightgbm_f15_tuned_uturn10.joblib student_test 00000007 00000009 00000077` | `results/maps/` |
-| 7. End to end | `python -m scripts.api_e2e artifacts/lightgbm_f15_tuned_uturn10.joblib "data/raw/Student folder/student_test"` (or the evaluator trip folder) | `results/e2e/` |
-| Model artifact | `python -m scripts.export_model --jobs 8 --params-json results/hpo/best_params_lightgbm_f15.json --output artifacts/lightgbm_f15_tuned_uturn10.joblib` | `artifacts/` |
+| 7. End to end | `python -m scripts.api_e2e artifacts/<artifact>.joblib "data/raw/Student folder/student_test"` (or the evaluator trip folder) | `results/e2e/` |
+| Model artifact, current | `python -m scripts.export_model --jobs 8 --params-json results/hpo/best_params_lightgbm_f15.json --beta-m 5 --uturn-penalty 10 --back-tol-m 15 --output artifacts/lightgbm_f15_tuned_backtol15.joblib` | `artifacts/` |
+| Model artifact, submitted | `python -m scripts.export_model --jobs 8 --params-json results/hpo/best_params_lightgbm_f15.json --output artifacts/lightgbm_f15_tuned_uturn10.joblib` | `artifacts/` |
 | Report | `python report/build_report.py`, then `python report/build_pdf.py` (needs Chrome or Chromium) | `report/PathSnap_Report.md`, `report/PathSnap_Report.pdf` |
 
 Model names for `train_models`: `logreg`, `gaussian_nb`, `knn`, `random_forest`, `lightgbm`, `mlp`. All
@@ -241,7 +261,7 @@ settings (seed, paths, candidate radius, folds) are in `configs/default.yaml`; t
 | `scripts/` | One command per pipeline step (see the table above) |
 | `api/` | FastAPI server (`main.py`) and server-side scoring (`evaluate.py`) |
 | `ui/` | Evaluator page; `ui/mock_api.py` stands in for the API when testing the UI alone |
-| `artifacts/` | The final exported model |
+| `artifacts/` | The current and the submitted exported models |
 | `configs/` | Run settings and the Bayesian search space |
 | `results/` | Every CSV, JSON, log and plot the scripts write |
 | `report/` | Report builder, figures and the generated report |
