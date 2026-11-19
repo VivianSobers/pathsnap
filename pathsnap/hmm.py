@@ -92,11 +92,13 @@ def reverse_arcs(arcs):
 
 
 def decode_trip(obs, arc, t_along, prob, px, py, t, nx, ny, arcs, beta=10.0, w=1.0,
-                split_s=60.0, limit_m=3000.0, uturn_penalty=0.0):
+                split_s=60.0, limit_m=3000.0, uturn_penalty=0.0, back_tol_m=None):
     """Decode one trip. obs/arc/t_along/prob: candidate rows sorted by obs. Returns {obs: arc}.
 
     uturn_penalty is subtracted from the log-transition score when consecutive states switch from an
     arc to its own reverse (a U-turn on the same road segment).
+    back_tol_m: apparent backward movement along the same arc that still counts as staying on it (GPS
+    jitter), in metres. None keeps the original rule of 5% of the arc's length.
     """
     g, alen = road_graph(nx, ny, arcs)
     rev = reverse_arcs(arcs) if uturn_penalty else None
@@ -121,7 +123,10 @@ def decode_trip(obs, arc, t_along, prob, px, py, t, nx, ny, arcs, beta=10.0, w=1
         A, B = idx[k]
         ra, rb = arc[A], arc[B]
         net = (1 - t_along[A]) * alen[ra] + nd[offs[k] : offs[k + 1]] + t_along[B] * alen[rb]
-        same = (ra == rb) & (t_along[B] >= t_along[A] - 0.05)
+        if back_tol_m is None:
+            same = (ra == rb) & (t_along[B] >= t_along[A] - 0.05)
+        else:
+            same = (ra == rb) & ((t_along[B] - t_along[A]) * alen[ra] >= -back_tol_m)
         net = np.where(same, np.abs(t_along[B] - t_along[A]) * alen[ra], net)
         gc = np.hypot(px[i1] - px[i0], py[i1] - py[i0])
         lt = np.where(np.isfinite(net), -np.abs(net - gc) / beta, NEG)
