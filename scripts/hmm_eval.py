@@ -12,6 +12,8 @@ import argparse
 import importlib.util
 import itertools
 import json
+import subprocess
+import sys
 import time
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
@@ -44,10 +46,10 @@ def _geom(path):
 
 
 def _decode(args):
-    tid, g, cand, beta, w, split_s, uturn = args
+    tid, g, cand, beta, w, split_s, uturn, back_tol = args
     return tid, decode_trip(cand["obs"], cand["arc"], cand["t_along"], cand["prob"], g["px"], g["py"],
                             g["t"], g["nx"], g["ny"], g["arcs"], beta=beta, w=w, split_s=split_s,
-                            uturn_penalty=uturn)
+                            uturn_penalty=uturn, back_tol_m=back_tol)
 
 
 def score(preds: dict, ref: dict, geoms: dict) -> dict:
@@ -76,13 +78,13 @@ def classifier_only(pairs, prob):
     return {t: dict(zip(g["obs"].tolist(), g["pred_arc"].tolist())) for t, g in top.groupby("trip")}
 
 
-def hmm_preds(pairs, prob, geoms, beta, w, split_s, workers, uturn=0.0):
+def hmm_preds(pairs, prob, geoms, beta, w, split_s, workers, uturn=0.0, back_tol=None):
     df = pairs[["trip", "obs", "arc", "t_along"]].copy(); df["prob"] = prob
     jobs = []
     for tid, g in df.groupby("trip", sort=False):
         g = g.sort_values("obs", kind="stable")
         cand = {c: g[c].to_numpy() for c in ["obs", "arc", "t_along", "prob"]}
-        jobs.append((tid, geoms[tid], cand, beta, w, split_s, uturn))
+        jobs.append((tid, geoms[tid], cand, beta, w, split_s, uturn, back_tol))
     with ProcessPoolExecutor(workers) as ex:
         return dict(ex.map(_decode, jobs))
 
@@ -94,6 +96,8 @@ def main():
     ap.add_argument("--ws", type=float, nargs="+", default=[0.5, 1.0, 2.0])
     ap.add_argument("--tag", default="")
     ap.add_argument("--uturns", type=float, nargs="+", default=[0.0])
+    ap.add_argument("--back-tols", nargs="+", default=["rel"],
+                    help="same-arc backward tolerance in metres, or 'rel' for 5%% of the arc length")
     ap.add_argument("--exclude-train-trips", nargs="*", default=[],
                     help="training trips left out of model fitting (they are still scored)")
     a = ap.parse_args()
@@ -118,22 +122,28 @@ def main():
         final = clone(model).fit(X[keep], y[keep]); tprob = final.predict_proba(tX)[:, 1]
         np.savez(cache, oof=oof, test=tprob)
 
+    back_tols = [None if b == "rel" else float(b) for b in a.back_tols]
     grid = []
-    for beta, w, u in itertools.product(a.betas, a.ws, a.uturns):
+    for beta, w, u, bt in itertools.product(a.betas, a.ws, a.uturns, back_tols):
         t0 = time.time()
-        s = score(hmm_preds(pairs, oof, geoms, beta, w, split_s, a.workers, u), ref, geoms)
-        grid.append({"beta": beta, "w": w, "uturn": u, **s, "seconds": time.time() - t0}); print(grid[-1], flush=True)
+        s = score(hmm_preds(pairs, oof, geoms, beta, w, split_s, a.workers, u, bt), ref, geoms)
+        grid.append({"beta": beta, "w": w, "uturn": u, "back_tol_m": bt, **s, "seconds": time.time() - t0})
+        print(grid[-1], flush=True)
     best = max(grid, key=lambda r: r["top1_accuracy"])
 
-    t0 = time.time(); test_hmm = hmm_preds(tpairs, tprob, geoms, best["beta"], best["w"], split_s, a.workers, best["uturn"])
+    t0 = time.time()
+    test_hmm = hmm_preds(tpairs, tprob, geoms, best["beta"], best["w"], split_s, a.workers, best["uturn"],
+                         best["back_tol_m"])
     hmm_s = time.time() - t0
     result = {
         "model": "lightgbm (untuned, same params as results/models/lightgbm.json)", "seed": seed,
+        "commit": subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True).stdout.strip(),
+        "argv": sys.argv[1:],
         "split_s": split_s, "selection": "best top1 on training out-of-fold predictions",
         "features": FEATURES, "excluded_train_trips": excl,
-        "best": {"beta": best["beta"], "w": best["w"], "uturn": best["uturn"]}, "grid_train_oof": grid,
+        "best": {k: best[k] for k in ("beta", "w", "uturn", "back_tol_m")}, "grid_train_oof": grid,
         "train_oof": {"classifier_only": score(classifier_only(pairs, oof), ref, geoms),
-                      "hmm": {k: v for k, v in best.items() if k not in ("beta", "w", "uturn", "seconds")}},
+                      "hmm": {k: v for k, v in best.items() if k not in ("beta", "w", "uturn", "back_tol_m", "seconds")}},
         "student_test": {"classifier_only": score(classifier_only(tpairs, tprob), tref, geoms),
                          "hmm": score(test_hmm, tref, geoms), "hmm_decode_seconds": hmm_s},
     }
