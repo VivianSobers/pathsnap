@@ -8,8 +8,6 @@ Distributed map-matching and route reconstruction: a LightGBM candidate classifi
 HMM/Viterbi decoding, a FastAPI server on one laptop and an evaluator UI on another.
 
 [![Evaluator Top-1](https://img.shields.io/badge/Evaluator%20Top--1-94.93%25-1B5E20?style=for-the-badge&labelColor=43A047)](#final-system)
-[![Student-test Top-1](https://img.shields.io/badge/Student--Test%20Top--1-94.28%25-2E7D32?style=for-the-badge&labelColor=66BB6A)](#final-system)
-[![HMM](https://img.shields.io/badge/HMM%20Gain-Top--1%200.8667%20%E2%86%92%200.9407-B71C1C?style=for-the-badge&labelColor=EF5350)](#what-the-hmm-adds)
 [![Models](https://img.shields.io/badge/Models-6%20Families%20%C2%B7%20LightGBM%20Chosen-E65100?style=for-the-badge&labelColor=FF9800)](#model-comparison)
 [![Tuning](https://img.shields.io/badge/Tuning-Optuna%20TPE%20%C2%B7%2032%20Trials-6A1B9A?style=for-the-badge&labelColor=AB47BC)](#bayesian-optimisation)
 [![Tests](https://img.shields.io/badge/Tests-26%20Passing-1B5E20?style=for-the-badge&labelColor=43A047&logo=pytest&logoColor=FFFFFF)](tests/)
