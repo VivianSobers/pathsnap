@@ -20,12 +20,15 @@ def main():
     parser.add_argument("--beta-m", type=float, default=100)
     parser.add_argument("--uturn-penalty", type=float, default=10.0,
                         help="decoder U-turn penalty; 10 was best on training out-of-fold predictions")
+    parser.add_argument("--emission-weight", type=float, default=1.0, help="decoder emission weight w")
+    parser.add_argument("--back-tol-m", type=float,
+                        help="same-arc backward tolerance in metres; omit for the original 5%% of arc length")
     parser.add_argument("--params-json", type=Path,
                         help="LightGBM parameters from an Optuna best_params*.json file")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
-    if args.beta_m <= 0 or args.jobs < 1:
-        parser.error("--beta-m and --jobs must be positive")
+    if args.beta_m <= 0 or args.jobs < 1 or args.emission_weight <= 0:
+        parser.error("--beta-m, --emission-weight and --jobs must be positive")
     config = load_config()
     model, subsample = models(config["seed"], args.jobs)[args.model]
     if not hasattr(model, "fit"):
@@ -44,6 +47,7 @@ def main():
         "model": model, "model_name": args.model, "features": FEATURES,
         "candidates": config["candidates"], "split_s": config["gaps"]["split_s"],
         "beta_m": args.beta_m, "uturn_penalty": args.uturn_penalty,
+        "emission_weight": args.emission_weight, "back_tol_m": args.back_tol_m,
         "params_json": str(args.params_json) if args.params_json else None,
     }, output, compress=3)
     print(output)
